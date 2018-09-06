@@ -29,8 +29,10 @@
     BloodFury				  = Spell(20572),
     GiftoftheNaaru		= Spell(59547),
     Shadowmeld        = Spell(58984),
+    Fireblood         = Spell(265221),
       
     -- Abilities
+    Backdraft 				= Spell(196406),
     Incinerate 				= Spell(29722),
     IncinerateAuto		= Spell(29722),
     IncinerateOrange 	= Spell(40239),
@@ -64,38 +66,40 @@
     CauterizeMaster		= Spell(119905),--imp
     Suffering				  = Spell(119907),--voidwalker
     SpellLock				  = Spell(119910),--Dogi
-    Whiplash				  = Spell(119909),--Bitch
+    Whiplash				  = Spell(119909),--succubus
     ShadowLock				= Spell(171140),--doomguard
     MeteorStrike			= Spell(171152),--infernal
     SingeMagic			  = Spell(89808),--imp
     SpellLock			    = Spell(19647),--felhunter
     
     -- Talents
-    Backdraft 				= Spell(196406),
-    RoaringBlaze 			= Spell(205184),
-    Shadowburn				= Spell(17877),
-    
-    ReverseEntropy		= Spell(205148),
     Eradication 			= Spell(196412),
+    SoulFire          = Spell(6353),
+
+    ReverseEntropy		= Spell(205148),
+    InternalCombuston = Spell(266134),
+    Shadowburn				= Spell(17877),
+
+    Inferno           = Spell(270545),
+    FireAndBrimstone 	= Spell(196408),
+    Cataclysm 				= Spell(152108),
+
+    RoaringBlaze 			= Spell(205184),
+    Flashover         = Spell(267115),
     EmpoweredLifeTap 	= Spell(235157),
-    
+   
     DemonicCircle 		= Spell(48018),
     MortalCoil 			  = Spell(6789),
     ShadowFury 			  = Spell(30283),
     
-    Cataclysm 				= Spell(152108),
-    FireAndBrimstone 	= Spell(196408),
-    SoulHarvest 			= Spell(196098),
-    
     GrimoireOfSupremacy 	= Spell(152107),
-    GrimoireOfService 		= Spell(108501),
     GrimoireOfSacrifice 	= Spell(108503),
-    
-    WreakHavoc				= Spell(196410),
+
+    DarkSoulInstability = Spell(113858),
     ChannelDemonfire 	= Spell(196447),
     SoulConduit 			= Spell(215941),
     
-    -- Artifact
+    -- Artifact all gone?
     DimensionalRift   = Spell(196586),
     LordOfFlames 			= Spell(224103),
     
@@ -107,17 +111,14 @@
     UnendingResolve 	= Spell(104773),
       
     -- Legendaries
-    LessonsOfSpaceTimeBuff = Spell(236176),
     SindoreiSpiteBuff = Spell(208868),
     SephuzBuff        = Spell(208052),
     NorgannonsBuff    = Spell(236431),
       
     -- Misc
     DemonicPower 			    = Spell(196099),
-    EmpoweredLifeTapBuff	= Spell(235156),
     LordOfFlamesDebuff    = Spell(226802),
     BackdraftBuff         = Spell(117828),
-    Concordance           = Spell(242586)
   };
   local S = Spell.Warlock.Destruction;
   
@@ -214,6 +215,31 @@
   end  
   
   local function CDs ()
+
+    -- actions.cds=summon_infernal,if=target.time_to_die>=210|!cooldown.dark_soul_instability.remains|target.time_to_die<=30+gcd|!talent.dark_soul_instability.enabled
+    if S.SummonInfernal:CooldownRemainsP() == 0 and 
+      (Target:FilteredTimeToDie(">=", 210) or 
+        not (S.DarkSoulInstability:IsAvailable() and 
+          S.DarkSoulInstability:CooldownRemainsP() > 0) or
+        Target:FilteredTimeToDie("<=", 30) or 
+        not S.DarkSoulInstability:IsAvailable()) then
+        if HR.Cast(S.SummonInfernal, Settings.Commons.GCDasOffGCD.SummonInfernal) then return ""; end
+    end
+
+    -- actions.cds+=/dark_soul_instability,if=target.time_to_die>=140|pet.infernal.active|target.time_to_die<=20
+    if S.DarkSoulInstability:IsAvailable() and S.DarkSoulInstability:CooldownRemainsP() == 0 and
+      (Target:FilteredTimeToDie(">=", 140) or 
+      -- infernal active, not sure this is best. What if we get an ability that lowers CD?
+      S.SummonInfernal:TimeSinceLastCast() < 180 or 
+      Target:FilteredTimeToDie("<=", 20)) then
+      if HR.Cast(S.DarkSoulInstability) then return ""; end
+    end
+
+    -- actions.cds+=/potion,if=pet.infernal.active|target.time_to_die<65
+    if Settings.Destruction.ShowPoPP and I.PotionOfProlongedPower:IsReady() and Target:FilteredTimeToDie("<=", 65) then
+      if HR.CastSuggested(I.PotionOfProlongedPower) then return ""; end
+    end
+
     -- actions+=/berserking
     if S.Berserking:IsAvailable() and S.Berserking:CooldownRemainsP() == 0 then
       if HR.Cast(S.Berserking, Settings.Commons.OffGCDasOffGCD.Racials) then return ""; end
@@ -224,36 +250,19 @@
       if HR.Cast(S.BloodFury, Settings.Commons.OffGCDasOffGCD.Racials) then return ""; end
     end
     
-    -- actions+=/use_items
-    
-    -- actions+=/potion,name=deadly_grace,if=(buff.soul_harvest.remains|trinket.proc.any.react|target.time_to_die<=45)
-    if Settings.Destruction.ShowPoPP and I.PotionOfProlongedPower:IsReady() and (Player:BuffRemainsP(S.SoulHarvest) > 0 or Target:FilteredTimeToDie("<=", 60)) then
-      if HR.CastSuggested(I.PotionOfProlongedPower) then return ""; end
+    -- actions+=/Fireblood
+    if S.Fireblood:IsAvailable() and S.Fireblood:CooldownRemainsP() == 0 then
+      if HR.Cast(S.Fireblood, Settings.Commons.OffGCDasOffGCD.Racials) then return ""; end
     end
+    
+
+    -- actions+=/use_items
     
     -- actions+=/service_pet
     if S.GrimoireImp:IsAvailable() and S.GrimoireImp:CooldownRemainsP() == 0 and FutureShard() >= 1 then
       if HR.Cast(S.GrimoireImp, Settings.Destruction.GCDasOffGCD.GrimoireImp) then return ""; end
     end
     
-    -- actions+=/summon_infernal,if=artifact.lord_of_flames.rank>0&!buff.lord_of_flames.remains
-    if not S.GrimoireOfSupremacy:IsAvailable() and S.SummonInfernal:IsAvailable() and S.SummonInfernal:CooldownRemainsP() == 0 
-      and ((S.LordOfFlames:ArtifactRank() > 0 and Player:DebuffRemainsP(S.LordOfFlamesDebuff) == 0) or Cache.EnemiesCount[range] > 2) and FutureShard() >= 1 then
-        if HR.Cast(S.SummonInfernal, Settings.Commons.GCDasOffGCD.SummonInfernal) then return ""; end
-    end
-    
-    -- actions+=/summon_doomguard,if=!talent.grimoire_of_supremacy.enabled&spell_targets.infernal_awakening<=2&(target.time_to_die>180|target.health.pct<=20|target.time_to_die<30)
-    if S.SummonDoomGuard:IsAvailable() and S.SummonDoomGuard:CooldownRemainsP() == 0 and FutureShard() >= 1
-      and not S.GrimoireOfSupremacy:IsAvailable() and Cache.EnemiesCount[range] <= 2 and (S.LordOfFlames:ArtifactRank() == 0 or Player:DebuffRemainsP(S.LordOfFlamesDebuff) > 0)
-      and ((Target:FilteredTimeToDie(">", 180) or Target:HealthPercentage() <= 20 or Target:FilteredTimeToDie("<", 30)) or (I.SindoreiSpite:IsEquipped() and S.SindoreiSpiteBuff:TimeSinceLastAppliedOnPlayer() >= 180))  then
-        if HR.Cast(S.SummonDoomGuard, Settings.Commons.GCDasOffGCD.SummonDoomGuard) then return ""; end
-    end
-    
-    -- actions+=/soul_harvest,if=!buff.soul_harvest.remains
-    if S.SoulHarvest:IsAvailable() and S.SoulHarvest:CooldownRemainsP() == 0 and Player:BuffRemainsP(S.SoulHarvest) == 0 then
-      if HR.Cast(S.SoulHarvest, Settings.Destruction.OffGCDasOffGCD.SoulHarvest) then return ""; end
-    end
-
   end
   
   local function Sephuz ()
@@ -464,14 +473,6 @@
             if HR.Cast(S.LifeTap, Settings.Commons.GCDasOffGCD.LifeTap) then return ""; end
           end
           
-          -- actions+=/dimensional_rift,if=equipped.144369&!buff.lessons_of_spacetime.remains&((!talent.grimoire_of_supremacy.enabled&!cooldown.summon_doomguard.remains)|(talent.grimoire_of_service.enabled&!cooldown.service_pet.remains)|(talent.soul_harvest.enabled&!cooldown.soul_harvest.remains))
-          if S.DimensionalRift:IsCastable() and S.DimensionalRift:ChargesP() > 0 and I.LessonsOfSpaceTime:IsEquipped() and Player:BuffRemainsP(S.LessonsOfSpaceTimeBuff) == 0 
-            and ((not S.GrimoireOfSupremacy:IsAvailable() and S.SummonDoomGuard:CooldownRemainsP() == 0) 
-              or (S.GrimoireOfService:IsAvailable() and not S.GrimoireImp:IsAvailable()) 
-              or (S.SoulHarvest:IsAvailable() and S.SoulHarvest:CooldownRemainsP() == 0)) then
-                if HR.Cast(S.DimensionalRift, Settings.Destruction.GCDasOffGCD.DimensionalRift) then return ""; end
-          end
-
           -- actions+=/chaos_bolt,if=active_enemies<4&buff.active_havoc.remains>cast_time
           if S.ChaosBolt:IsCastable() and FutureShard() >= 2 and Cache.EnemiesCount[range] < 4 and EnemyHasHavoc() > S.ChaosBolt:CastTime() then
             if HR.Cast(S.ChaosBolt) then return ""; end
@@ -491,20 +492,7 @@
           if HR.AoEON() and S.RainOfFire:IsAvailable() and Cache.EnemiesCount[range] >= 6 and S.WreakHavoc:IsAvailable() and FutureShard() >= 3 then
             if HR.Cast(CastRainOfFire) then return ""; end
           end
-          
-          -- actions+=/dimensional_rift,if=target.time_to_die<=32|!equipped.144369|charges>1|(!equipped.144369&(!talent.grimoire_of_service.enabled|recharge_time<cooldown.service_pet.remains)&(!talent.soul_harvest.enabled|recharge_time<cooldown.soul_harvest.remains)&(!talent.grimoire_of_supremacy.enabled|recharge_time<cooldown.summon_doomguard.remains))
-          if S.DimensionalRift:IsCastable() and S.DimensionalRift:ChargesP() > 0 
-          and (Target:FilteredTimeToDie("<=", 32) or not I.LessonsOfSpaceTime:IsEquipped() or S.DimensionalRift:ChargesP() > 1 
-            or (not I.LessonsOfSpaceTime:IsEquipped() and (not S.GrimoireOfService:IsAvailable() or S.DimensionalRift:RechargeP() < S.GrimoireImp:CooldownRemainsP()) 
-              and (not S.SoulHarvest:IsAvailable() or S.DimensionalRift:RechargeP() < S.SoulHarvest:CooldownRemainsP()))) then
-                if HR.Cast(S.DimensionalRift, Settings.Destruction.GCDasOffGCD.DimensionalRift) then return ""; end
-          end
-          
-          -- actions+=/life_tap,if=talent.empowered_life_tap.enabled&buff.empowered_life_tap.remains<duration*0.3
-          if S.LifeTap:IsCastable() and S.EmpoweredLifeTap:IsAvailable() and Player:BuffRefreshableCP(S.EmpoweredLifeTapBuff) then
-            if HR.Cast(S.LifeTap, Settings.Commons.GCDasOffGCD.LifeTap) then return ""; end
-          end
-          
+                   
           -- actions+=/cataclysm
           if S.Cataclysm:IsAvailable() and S.Cataclysm:CooldownRemainsP() == 0 and not Player:IsCasting(S.Cataclysm) then
             if HR.Cast(S.Cataclysm) then return ""; end
@@ -566,11 +554,7 @@
             end
           end
           
-          -- actions+=/dimensional_rift,if=charges=3
-          if S.DimensionalRift:IsCastable() and S.DimensionalRift:Charges() == 3 or (S.DimensionalRift:Charges() == 2 and S.DimensionalRift:RechargeP() == 0) then
-            if HR.Cast(S.DimensionalRift, Settings.Destruction.GCDasOffGCD.DimensionalRift) then return ""; end
-          end
-          
+        
           -- actions+=/shadowburn,if=soul_shard<4&buff.conflagration_of_chaos.remains<=action.chaos_bolt.cast_time
           if S.Shadowburn:IsAvailable() and S.Shadowburn:IsCastable() and FutureShard() < 4 and S.Shadowburn:ChargesP() >= 1 and Player:BuffRemainsP(S.ConflagrationOfChaosDebuff) <= S.ChaosBolt:CastTime() then
             if HR.Cast(S.Shadowburn) then return ""; end
@@ -601,14 +585,6 @@
             if HR.Cast(S.LifeTap, Settings.Commons.GCDasOffGCD.LifeTap) then return ""; end
           end
           
-          -- actions+=/dimensional_rift,if=equipped.144369&!buff.lessons_of_spacetime.remains&((!talent.grimoire_of_supremacy.enabled&!cooldown.summon_doomguard.remains)|(talent.grimoire_of_service.enabled&!cooldown.service_pet.remains)|(talent.soul_harvest.enabled&!cooldown.soul_harvest.remains))
-          if S.DimensionalRift:IsCastable() and S.DimensionalRift:ChargesP() > 0 and I.LessonsOfSpaceTime:IsEquipped() and Player:BuffRemainsP(S.LessonsOfSpaceTimeBuff) == 0 
-            and ((not S.GrimoireOfSupremacy:IsAvailable() and S.SummonDoomGuard:CooldownRemainsP() == 0) 
-              or (S.GrimoireOfService:IsAvailable() and not S.GrimoireImp:IsAvailable()) 
-              or (S.SoulHarvest:IsAvailable() and S.SoulHarvest:CooldownRemainsP() == 0)) then
-                if HR.Cast(S.DimensionalRift, Settings.Destruction.GCDasOffGCD.DimensionalRift) then return ""; end
-          end
-          
           -- actions+=/rain_of_fire,if=active_enemies>=3
           if HR.AoEON() and S.RainOfFire:IsAvailable() and Cache.EnemiesCount[range] >= 3 and FutureShard() >= 3 then
             if HR.Cast(CastRainOfFire) then return ""; end
@@ -618,20 +594,7 @@
           if HR.AoEON() and S.RainOfFire:IsAvailable() and Cache.EnemiesCount[range] >= 6 and S.WreakHavoc:IsAvailable() and FutureShard() >= 3 then
             if HR.Cast(CastRainOfFire) then return ""; end
           end
-          
-          -- actions+=/dimensional_rift,if=target.time_to_die<=32|!equipped.144369|charges>1|(!equipped.144369&(!talent.grimoire_of_service.enabled|recharge_time<cooldown.service_pet.remains)&(!talent.soul_harvest.enabled|recharge_time<cooldown.soul_harvest.remains)&(!talent.grimoire_of_supremacy.enabled|recharge_time<cooldown.summon_doomguard.remains))
-          if S.DimensionalRift:IsCastable() and S.DimensionalRift:ChargesP() > 0 
-          and (Target:FilteredTimeToDie("<=", 32) or not I.LessonsOfSpaceTime:IsEquipped() or S.DimensionalRift:ChargesP() > 1 
-            or (not I.LessonsOfSpaceTime:IsEquipped() and (not S.GrimoireOfService:IsAvailable() or S.DimensionalRift:RechargeP() < S.GrimoireImp:CooldownRemainsP()) 
-              and (not S.SoulHarvest:IsAvailable() or S.DimensionalRift:RechargeP() < S.SoulHarvest:CooldownRemainsP()))) then
-                if HR.Cast(S.DimensionalRift, Settings.Destruction.GCDasOffGCD.DimensionalRift) then return ""; end
-          end
-          
-          -- actions+=/life_tap,if=talent.empowered_life_tap.enabled&buff.empowered_life_tap.remains<duration*0.3
-          if S.LifeTap:IsCastable() and S.EmpoweredLifeTap:IsAvailable() and Player:BuffRefreshableCP(S.EmpoweredLifeTapBuff) then
-            if HR.Cast(S.LifeTap, Settings.Commons.GCDasOffGCD.LifeTap) then return ""; end
-          end
-          
+
           -- actions+=/shadowburn
           if S.Shadowburn:IsAvailable() and S.Shadowburn:IsCastable() and S.Shadowburn:ChargesP() >= 1 then
             if HR.Cast(S.Shadowburn) then return ""; end
@@ -776,59 +739,88 @@
 
 
 --- ======= SIMC =======
---- Last Update: 01/03/2018
+--- Last Update: 08/10/2018
 
 -- # Executed before combat begins. Accepts non-harmful actions only.
 -- actions.precombat=flask
 -- actions.precombat+=/food
 -- actions.precombat+=/augmentation
--- actions.precombat+=/summon_pet,if=!talent.grimoire_of_supremacy.enabled&(!talent.grimoire_of_sacrifice.enabled|buff.demonic_power.down)
--- actions.precombat+=/summon_infernal,if=talent.grimoire_of_supremacy.enabled&artifact.lord_of_flames.rank>0
--- actions.precombat+=/summon_infernal,if=talent.grimoire_of_supremacy.enabled&active_enemies>1
--- actions.precombat+=/summon_doomguard,if=talent.grimoire_of_supremacy.enabled&active_enemies=1&artifact.lord_of_flames.rank=0
--- actions.precombat+=/snapshot_stats
+-- actions.precombat+=/summon_pet
 -- actions.precombat+=/grimoire_of_sacrifice,if=talent.grimoire_of_sacrifice.enabled
--- actions.precombat+=/life_tap,if=talent.empowered_life_tap.enabled&!buff.empowered_life_tap.remains
+-- actions.precombat+=/snapshot_stats
 -- actions.precombat+=/potion
--- actions.precombat+=/chaos_bolt
+-- actions.precombat+=/soul_fire
+-- actions.precombat+=/incinerate,if=!talent.soul_fire.enabled
 
 -- # Executed every time the actor is available.
--- actions=immolate,cycle_targets=1,if=active_enemies=2&talent.roaring_blaze.enabled&!cooldown.havoc.remains&dot.immolate.remains<=buff.active_havoc.duration
--- actions+=/havoc,target=2,if=active_enemies>1&(active_enemies<4|talent.wreak_havoc.enabled&active_enemies<6)&!debuff.havoc.remains
--- actions+=/dimensional_rift,if=charges=3
--- actions+=/cataclysm,if=spell_targets.cataclysm>=3
--- actions+=/immolate,if=(active_enemies<5|!talent.fire_and_brimstone.enabled)&remains<=tick_time
--- actions+=/immolate,cycle_targets=1,if=(active_enemies<5|!talent.fire_and_brimstone.enabled)&(!talent.cataclysm.enabled|cooldown.cataclysm.remains>=action.immolate.cast_time*active_enemies)&active_enemies>1&remains<=tick_time&(!talent.roaring_blaze.enabled|(!debuff.roaring_blaze.remains&action.conflagrate.charges<2+set_bonus.tier19_4pc))
--- actions+=/immolate,if=talent.roaring_blaze.enabled&remains<=duration&!debuff.roaring_blaze.remains&target.time_to_die>10&(action.conflagrate.charges=2+set_bonus.tier19_4pc|(action.conflagrate.charges>=1+set_bonus.tier19_4pc&action.conflagrate.recharge_time<cast_time+gcd)|target.time_to_die<24)
--- actions+=/berserking
--- actions+=/blood_fury
--- actions+=/use_items
--- actions+=/potion,name=deadly_grace,if=(buff.soul_harvest.remains|trinket.proc.any.react|target.time_to_die<=45)
--- actions+=/shadowburn,if=soul_shard<4&buff.conflagration_of_chaos.remains<=action.chaos_bolt.cast_time
--- actions+=/shadowburn,if=(charges=1+set_bonus.tier19_4pc&recharge_time<action.chaos_bolt.cast_time|charges=2+set_bonus.tier19_4pc)&soul_shard<5
--- actions+=/conflagrate,if=talent.roaring_blaze.enabled&(charges=2+set_bonus.tier19_4pc|(charges>=1+set_bonus.tier19_4pc&recharge_time<gcd)|target.time_to_die<24)
--- actions+=/conflagrate,if=talent.roaring_blaze.enabled&debuff.roaring_blaze.stack>0&dot.immolate.remains>dot.immolate.duration*0.3&(active_enemies=1|soul_shard<3)&soul_shard<5
--- actions+=/conflagrate,if=!talent.roaring_blaze.enabled&buff.backdraft.stack<3&(charges=1+set_bonus.tier19_4pc&recharge_time<action.chaos_bolt.cast_time|charges=2+set_bonus.tier19_4pc)&soul_shard<5
--- actions+=/life_tap,if=talent.empowered_life_tap.enabled&buff.empowered_life_tap.remains<=gcd
--- actions+=/dimensional_rift,if=equipped.144369&!buff.lessons_of_spacetime.remains&((!talent.grimoire_of_supremacy.enabled&!cooldown.summon_doomguard.remains)|(talent.grimoire_of_service.enabled&!cooldown.service_pet.remains)|(talent.soul_harvest.enabled&!cooldown.soul_harvest.remains))
--- actions+=/service_pet
--- actions+=/summon_infernal,if=artifact.lord_of_flames.rank>0&!buff.lord_of_flames.remains
--- actions+=/summon_doomguard,if=!talent.grimoire_of_supremacy.enabled&spell_targets.infernal_awakening<=2&(target.time_to_die>180|target.health.pct<=20|target.time_to_die<30)
--- actions+=/summon_infernal,if=!talent.grimoire_of_supremacy.enabled&spell_targets.infernal_awakening>2
--- actions+=/summon_doomguard,if=talent.grimoire_of_supremacy.enabled&spell_targets.summon_infernal=1&artifact.lord_of_flames.rank>0&buff.lord_of_flames.remains&!pet.doomguard.active
--- actions+=/summon_doomguard,if=talent.grimoire_of_supremacy.enabled&spell_targets.summon_infernal=1&equipped.132379&!cooldown.sindorei_spite_icd.remains
--- actions+=/summon_infernal,if=talent.grimoire_of_supremacy.enabled&spell_targets.summon_infernal>1&equipped.132379&!cooldown.sindorei_spite_icd.remains
--- actions+=/soul_harvest,if=!buff.soul_harvest.remains
--- actions+=/chaos_bolt,if=active_enemies<4&buff.active_havoc.remains>cast_time
--- actions+=/channel_demonfire,if=dot.immolate.remains>cast_time&(active_enemies=1|buff.active_havoc.remains<action.chaos_bolt.cast_time)
--- actions+=/rain_of_fire,if=active_enemies>=3
--- actions+=/rain_of_fire,if=active_enemies>=6&talent.wreak_havoc.enabled
--- actions+=/dimensional_rift,if=target.time_to_die<=32|!equipped.144369|charges>1|(!equipped.144369&(!talent.grimoire_of_service.enabled|recharge_time<cooldown.service_pet.remains)&(!talent.soul_harvest.enabled|recharge_time<cooldown.soul_harvest.remains)&(!talent.grimoire_of_supremacy.enabled|recharge_time<cooldown.summon_doomguard.remains))
--- actions+=/life_tap,if=talent.empowered_life_tap.enabled&buff.empowered_life_tap.remains<duration*0.3
+-- actions=run_action_list,name=cata,if=spell_targets.infernal_awakening>=3&talent.cataclysm.enabled
+-- actions+=/run_action_list,name=fnb,if=spell_targets.infernal_awakening>=3&talent.fire_and_brimstone.enabled
+-- actions+=/run_action_list,name=inf,if=spell_targets.infernal_awakening>=3&talent.inferno.enabled
+-- actions+=/immolate,cycle_targets=1,if=!debuff.havoc.remains&(refreshable|talent.internal_combustion.enabled&action.chaos_bolt.in_flight&remains-action.chaos_bolt.travel_time-5<duration*0.3)
+-- actions+=/call_action_list,name=cds
+-- actions+=/havoc,cycle_targets=1,if=!(target=sim.target)&target.time_to_die>10
+-- actions+=/havoc,if=active_enemies>1
+-- actions+=/channel_demonfire
 -- actions+=/cataclysm
--- actions+=/chaos_bolt,if=active_enemies<3&(cooldown.havoc.remains>12&cooldown.havoc.remains|active_enemies=1|soul_shard>=5-spell_targets.infernal_awakening*1.5|target.time_to_die<=10)
--- actions+=/shadowburn
--- actions+=/conflagrate,if=!talent.roaring_blaze.enabled&buff.backdraft.stack<3
--- actions+=/immolate,cycle_targets=1,if=(active_enemies<5|!talent.fire_and_brimstone.enabled)&(!talent.cataclysm.enabled|cooldown.cataclysm.remains>=action.immolate.cast_time*active_enemies)&!talent.roaring_blaze.enabled&remains<=duration*0.3
--- actions+=/incinerate
--- actions+=/life_tap
+-- actions+=/soul_fire,cycle_targets=1,if=!debuff.havoc.remains
+-- actions+=/chaos_bolt,cycle_targets=1,if=!debuff.havoc.remains&execute_time+travel_time<target.time_to_die&(talent.internal_combustion.enabled|!talent.internal_combustion.enabled&soul_shard>=4|(talent.eradication.enabled&debuff.eradication.remains<=cast_time)|buff.dark_soul_instability.remains>cast_time|pet.infernal.active&talent.grimoire_of_supremacy.enabled)
+-- actions+=/conflagrate,cycle_targets=1,if=!debuff.havoc.remains&((talent.flashover.enabled&buff.backdraft.stack<=2)|(!talent.flashover.enabled&buff.backdraft.stack<2))
+-- actions+=/shadowburn,cycle_targets=1,if=!debuff.havoc.remains&((charges=2|!buff.backdraft.remains|buff.backdraft.remains>buff.backdraft.stack*action.incinerate.execute_time))
+-- actions+=/incinerate,cycle_targets=1,if=!debuff.havoc.remains
+
+-- actions.cata=call_action_list,name=cds
+-- actions.cata+=/rain_of_fire,if=soul_shard>=4.5
+-- actions.cata+=/cataclysm
+-- actions.cata+=/immolate,if=talent.channel_demonfire.enabled&!remains&cooldown.channel_demonfire.remains<=action.chaos_bolt.execute_time
+-- actions.cata+=/channel_demonfire
+-- actions.cata+=/havoc,cycle_targets=1,if=!(target=sim.target)&target.time_to_die>10&spell_targets.rain_of_fire<=8&talent.grimoire_of_supremacy.enabled&pet.infernal.active&pet.infernal.remains<=10
+-- actions.cata+=/havoc,if=spell_targets.rain_of_fire<=8&talent.grimoire_of_supremacy.enabled&pet.infernal.active&pet.infernal.remains<=10
+-- actions.cata+=/chaos_bolt,cycle_targets=1,if=!debuff.havoc.remains&talent.grimoire_of_supremacy.enabled&pet.infernal.remains>execute_time&active_enemies<=8&((108*spell_targets.rain_of_fire%3)<(240*(1+0.08*buff.grimoire_of_supremacy.stack)%2*(1+buff.active_havoc.remains>execute_time)))
+-- actions.cata+=/havoc,cycle_targets=1,if=!(target=sim.target)&target.time_to_die>10&spell_targets.rain_of_fire<=4
+-- actions.cata+=/havoc,if=spell_targets.rain_of_fire<=4
+-- actions.cata+=/chaos_bolt,cycle_targets=1,if=!debuff.havoc.remains&buff.active_havoc.remains>execute_time&spell_targets.rain_of_fire<=4
+-- actions.cata+=/immolate,cycle_targets=1,if=!debuff.havoc.remains&refreshable&remains<=cooldown.cataclysm.remains
+-- actions.cata+=/rain_of_fire
+-- actions.cata+=/soul_fire,cycle_targets=1,if=!debuff.havoc.remains
+-- actions.cata+=/conflagrate,cycle_targets=1,if=!debuff.havoc.remains
+-- actions.cata+=/shadowburn,cycle_targets=1,if=!debuff.havoc.remains&((charges=2|!buff.backdraft.remains|buff.backdraft.remains>buff.backdraft.stack*action.incinerate.execute_time))
+-- actions.cata+=/incinerate,cycle_targets=1,if=!debuff.havoc.remains
+
+-- actions.cds=summon_infernal,if=target.time_to_die>=210|!cooldown.dark_soul_instability.remains|target.time_to_die<=30+gcd|!talent.dark_soul_instability.enabled
+-- actions.cds+=/dark_soul_instability,if=target.time_to_die>=140|pet.infernal.active|target.time_to_die<=20+gcd
+-- actions.cds+=/potion,if=pet.infernal.active|target.time_to_die<65
+-- actions.cds+=/berserking
+-- actions.cds+=/blood_fury
+-- actions.cds+=/fireblood
+-- actions.cds+=/use_items
+
+-- actions.fnb=call_action_list,name=cds
+-- actions.fnb+=/rain_of_fire,if=soul_shard>=4.5
+-- actions.fnb+=/immolate,if=talent.channel_demonfire.enabled&!remains&cooldown.channel_demonfire.remains<=action.chaos_bolt.execute_time
+-- actions.fnb+=/channel_demonfire
+-- actions.fnb+=/havoc,cycle_targets=1,if=!(target=sim.target)&target.time_to_die>10&spell_targets.rain_of_fire<=4&talent.grimoire_of_supremacy.enabled&pet.infernal.active&pet.infernal.remains<=10
+-- actions.fnb+=/havoc,if=spell_targets.rain_of_fire<=4&talent.grimoire_of_supremacy.enabled&pet.infernal.active&pet.infernal.remains<=10
+-- actions.fnb+=/chaos_bolt,cycle_targets=1,if=!debuff.havoc.remains&talent.grimoire_of_supremacy.enabled&pet.infernal.remains>execute_time&active_enemies<=4&((108*spell_targets.rain_of_fire%3)<(240*(1+0.08*buff.grimoire_of_supremacy.stack)%2*(1+buff.active_havoc.remains>execute_time)))
+-- actions.fnb+=/immolate,cycle_targets=1,if=!debuff.havoc.remains&refreshable&spell_targets.incinerate<=8
+-- actions.fnb+=/rain_of_fire
+-- actions.fnb+=/soul_fire,cycle_targets=1,if=!debuff.havoc.remains&spell_targets.incinerate=3
+-- actions.fnb+=/conflagrate,cycle_targets=1,if=!debuff.havoc.remains&(talent.flashover.enabled&buff.backdraft.stack<=2|spell_targets.incinerate<=7|talent.roaring_blaze.enabled&spell_targets.incinerate<=9)
+-- actions.fnb+=/incinerate,cycle_targets=1,if=!debuff.havoc.remains
+
+-- actions.inf=call_action_list,name=cds
+-- actions.inf+=/rain_of_fire,if=soul_shard>=4.5
+-- actions.inf+=/cataclysm
+-- actions.inf+=/immolate,if=talent.channel_demonfire.enabled&!remains&cooldown.channel_demonfire.remains<=action.chaos_bolt.execute_time
+-- actions.inf+=/channel_demonfire
+-- actions.inf+=/havoc,cycle_targets=1,if=!(target=sim.target)&target.time_to_die>10&spell_targets.rain_of_fire<=4+talent.internal_combustion.enabled&talent.grimoire_of_supremacy.enabled&pet.infernal.active&pet.infernal.remains<=10
+-- actions.inf+=/havoc,if=spell_targets.rain_of_fire<=4+talent.internal_combustion.enabled&talent.grimoire_of_supremacy.enabled&pet.infernal.active&pet.infernal.remains<=10
+-- actions.inf+=/chaos_bolt,cycle_targets=1,if=!debuff.havoc.remains&talent.grimoire_of_supremacy.enabled&pet.infernal.remains>execute_time&spell_targets.rain_of_fire<=4+talent.internal_combustion.enabled&((108*spell_targets.rain_of_fire%(3-0.16*spell_targets.rain_of_fire))<(240*(1+0.08*buff.grimoire_of_supremacy.stack)%2*(1+buff.active_havoc.remains>execute_time)))
+-- actions.inf+=/havoc,cycle_targets=1,if=!(target=sim.target)&target.time_to_die>10&spell_targets.rain_of_fire<=3&(talent.eradication.enabled|talent.internal_combustion.enabled)
+-- actions.inf+=/havoc,if=spell_targets.rain_of_fire<=3&(talent.eradication.enabled|talent.internal_combustion.enabled)
+-- actions.inf+=/chaos_bolt,cycle_targets=1,if=!debuff.havoc.remains&buff.active_havoc.remains>execute_time&spell_targets.rain_of_fire<=3&(talent.eradication.enabled|talent.internal_combustion.enabled)
+-- actions.inf+=/immolate,cycle_targets=1,if=!debuff.havoc.remains&refreshable
+-- actions.inf+=/rain_of_fire
+-- actions.inf+=/soul_fire,cycle_targets=1,if=!debuff.havoc.remains
+-- actions.inf+=/conflagrate,cycle_targets=1,if=!debuff.havoc.remains
+-- actions.inf+=/shadowburn,cycle_targets=1,if=!debuff.havoc.remains&((charges=2|!buff.backdraft.remains|buff.backdraft.remains>buff.backdraft.stack*action.incinerate.execute_time))
+-- actions.inf+=/incinerate,cycle_targets=1,if=!debuff.havoc.remains
