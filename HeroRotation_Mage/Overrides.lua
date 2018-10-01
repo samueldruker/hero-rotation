@@ -97,7 +97,7 @@
       return math.min(
           num(Player:BuffP(SpellFire.HeatingUpBuff))
         + num(Player:BuffP(SpellFire.CombustionBuff) and (Player:IsCasting(SpellFire.Fireball) or Player:IsCasting(SpellFire.Scorch) or Player:IsCasting(SpellFire.Pyroblast)))
-        + num((Player:IsCasting(SpellFire.Scorch) and (Target:HealthPercentage() <= 30 and (Item.Mage.Fire.Item132454:IsEquipped() or SpellFire.SearingTouch:IsAvailable()))))
+        + num((Player:IsCasting(SpellFire.Scorch) and (Target:HealthPercentage() <= 30 and SpellFire.SearingTouch:IsAvailable())))
         + num(bool(SpellFire.Firestarter:ActiveStatus()) and (Player:IsCasting(SpellFire.Fireball) or Player:IsCasting(SpellFire.Pyroblast)))
         + num(SpellFire.PhoenixFlames:InFlight())
         + num(SpellFire.Pyroblast:InFlight(SpellFire.CombustionBuff))
@@ -156,6 +156,8 @@
       local BaseCheck = self:IsLearned() and self:CooldownRemainsP( BypassRecovery, Offset or "Auto") == 0 and RangeOK
       if self == SpellFire.RuneofPower then
         return BaseCheck and not Player:IsCasting(SpellFire.RuneofPower)
+      elseif self == SpellFire.DragonsBreath then
+        return BaseCheck and (Cache.EnemiesCount[10] >= 1)
       else
         return BaseCheck
       end
