@@ -393,17 +393,6 @@
           end
           
           -- actions+=/havoc,target=2,if=active_enemies>1&(active_enemies<4|talent.wreak_havoc.enabled&active_enemies<6)&!debuff.havoc.remains
-          if HR.AoEON() and Player:ManaP() >= S.Havoc:Cost() and Cache.EnemiesCount[range] > 1 and (Cache.EnemiesCount[range] < 4 or (S.WreakHavoc:IsAvailable() and Cache.EnemiesCount[range] < 6)) and S.Havoc:CooldownRemainsP() == 0 then
-            BestUnit, BestUnitTTD, BestUnitSpellToCast = nil, 10, nil;
-            for _, Value in pairs(Cache.Enemies[range]) do
-              if Value:DebuffRemainsP(S.Havoc) == 0 and not Value:IsUnit(Target) and Value:FilteredTimeToDie(">", BestUnitTTD, - Value:DebuffRemainsP(S.Havoc)) then
-                BestUnit, BestUnitTTD, BestUnitSpellToCast = Value, Value:TimeToDie(), S.Havoc;
-              end	
-            end
-            if BestUnit then
-              if HR.CastLeftNameplate(BestUnit, BestUnitSpellToCast) then return ""; end
-            end
-          end
           
           -- actions+=/dimensional_rift,if=charges=3
           if S.DimensionalRift:IsCastable() and S.DimensionalRift:Charges() == 3 or (S.DimensionalRift:Charges() == 2 and S.DimensionalRift:RechargeP() == 0) then
@@ -487,11 +476,6 @@
           if HR.AoEON() and S.RainOfFire:IsAvailable() and Cache.EnemiesCount[range] >= 3 and FutureShard() >= 3 then
             if HR.Cast(CastRainOfFire) then return ""; end
           end
-          
-          -- actions+=/rain_of_fire,if=active_enemies>=6&talent.wreak_havoc.enabled
-          if HR.AoEON() and S.RainOfFire:IsAvailable() and Cache.EnemiesCount[range] >= 6 and S.WreakHavoc:IsAvailable() and FutureShard() >= 3 then
-            if HR.Cast(CastRainOfFire) then return ""; end
-          end
                    
           -- actions+=/cataclysm
           if S.Cataclysm:IsAvailable() and S.Cataclysm:CooldownRemainsP() == 0 and not Player:IsCasting(S.Cataclysm) then
@@ -542,19 +526,7 @@
         
         else --moving
           -- actions+=/havoc,target=2,if=active_enemies>1&(active_enemies<4|talent.wreak_havoc.enabled&active_enemies<6)&!debuff.havoc.remains
-          if HR.AoEON() and Player:ManaP() >= S.Havoc:Cost() and Cache.EnemiesCount[range] > 1 and (Cache.EnemiesCount[range] < 4 or (S.WreakHavoc:IsAvailable() and Cache.EnemiesCount[range] < 6)) and S.Havoc:CooldownRemainsP() == 0 then
-            BestUnit, BestUnitTTD, BestUnitSpellToCast = nil, 10, nil;
-            for _, Value in pairs(Cache.Enemies[range]) do
-              if Value:DebuffRemainsP(S.Havoc) == 0 and not Value:IsUnit(Target) and Value:FilteredTimeToDie(">", BestUnitTTD, - Value:DebuffRemainsP(S.Havoc)) then
-                BestUnit, BestUnitTTD, BestUnitSpellToCast = Value, Value:TimeToDie(), S.Havoc;
-              end	
-            end
-            if BestUnit then
-              if HR.CastLeftNameplate(BestUnit, BestUnitSpellToCast) then return ""; end
-            end
-          end
-          
-        
+
           -- actions+=/shadowburn,if=soul_shard<4&buff.conflagration_of_chaos.remains<=action.chaos_bolt.cast_time
           if S.Shadowburn:IsAvailable() and S.Shadowburn:IsCastable() and FutureShard() < 4 and S.Shadowburn:ChargesP() >= 1 and Player:BuffRemainsP(S.ConflagrationOfChaosDebuff) <= S.ChaosBolt:CastTime() then
             if HR.Cast(S.Shadowburn) then return ""; end
@@ -590,11 +562,6 @@
             if HR.Cast(CastRainOfFire) then return ""; end
           end
           
-          -- actions+=/rain_of_fire,if=active_enemies>=6&talent.wreak_havoc.enabled
-          if HR.AoEON() and S.RainOfFire:IsAvailable() and Cache.EnemiesCount[range] >= 6 and S.WreakHavoc:IsAvailable() and FutureShard() >= 3 then
-            if HR.Cast(CastRainOfFire) then return ""; end
-          end
-
           -- actions+=/shadowburn
           if S.Shadowburn:IsAvailable() and S.Shadowburn:IsCastable() and S.Shadowburn:ChargesP() >= 1 then
             if HR.Cast(S.Shadowburn) then return ""; end
@@ -628,17 +595,6 @@
           end
           
           -- actions+=/havoc,target=2,if=active_enemies>1&(active_enemies<4|talent.wreak_havoc.enabled&active_enemies<6)&!debuff.havoc.remains
-          if HR.AoEON() and Player:ManaP() >= S.Havoc:Cost() and Cache.EnemiesCount[range] > 1 and (Cache.EnemiesCount[range] < 4 or (S.WreakHavoc:IsAvailable() and Cache.EnemiesCount[range] < 6)) and S.Havoc:CooldownRemainsP() == 0 then
-            BestUnit, BestUnitTTD, BestUnitSpellToCast = nil, 10, nil;
-            for _, Value in pairs(Cache.Enemies[range]) do
-              if Value:DebuffRemainsP(S.Havoc) == 0 and not Value:IsUnit(Target) and Value:FilteredTimeToDie(">", BestUnitTTD, - Value:DebuffRemainsP(S.Havoc)) then
-                BestUnit, BestUnitTTD, BestUnitSpellToCast = Value, Value:TimeToDie(), S.Havoc;
-              end	
-            end
-            if BestUnit then
-              if HR.CastLeftNameplate(BestUnit, BestUnitSpellToCast) then return ""; end
-            end
-          end
           
           -- actions+=/immolate,cycle_targets=1,if=(active_enemies<5|!talent.fire_and_brimstone.enabled)&(!talent.cataclysm.enabled|cooldown.cataclysm.remains>=action.immolate.cast_time*active_enemies)&active_enemies>1&remains<=tick_time&(!talent.roaring_blaze.enabled|(!debuff.roaring_blaze.remains&action.conflagrate.charges<2+set_bonus.tier19_4pc))
           if HR.AoEON() and Player:ManaP() >= S.Immolate:Cost() and (Cache.EnemiesCount[range] < 5 or not S.FireAndBrimstone:IsAvailable()) and (not S.Cataclysm:IsAvailable() or S.Cataclysm:CooldownRemainsP()>= S.Immolate:CastTime()*Cache.EnemiesCount[range]) and Cache.EnemiesCount[range]>1 then
@@ -664,9 +620,6 @@
           end
           
           -- actions+=/rain_of_fire,if=active_enemies>=6&talent.wreak_havoc.enabled
-          if HR.AoEON() and S.RainOfFire:IsAvailable() and Cache.EnemiesCount[range] >= 6 and S.WreakHavoc:IsAvailable() and FutureShard() >= 3 then
-            if HR.Cast(CastRainOfFire) then return ""; end
-          end
           
           -- actions+=/life_tap,if=talent.empowered_life_tap.enabled&buff.empowered_life_tap.remains<duration*0.3
           if S.LifeTap:IsCastable() and S.EmpoweredLifeTap:IsAvailable() and Player:BuffRefreshableCP(S.EmpoweredLifeTapBuff) then
@@ -694,18 +647,7 @@
           return;
         else --moving
           -- actions+=/havoc,target=2,if=active_enemies>1&(active_enemies<4|talent.wreak_havoc.enabled&active_enemies<6)&!debuff.havoc.remains
-          if HR.AoEON() and Player:ManaP() >= S.Havoc:Cost() and Cache.EnemiesCount[range] > 1 and (Cache.EnemiesCount[range] < 4 or (S.WreakHavoc:IsAvailable() and Cache.EnemiesCount[range] < 6)) and S.Havoc:CooldownRemainsP() == 0 then
-            BestUnit, BestUnitTTD, BestUnitSpellToCast = nil, 10, nil;
-            for _, Value in pairs(Cache.Enemies[range]) do
-              if Value:DebuffRemainsP(S.Havoc) == 0 and not Value:IsUnit(Target) and Value:FilteredTimeToDie(">", BestUnitTTD, - Value:DebuffRemainsP(S.Havoc)) then
-                BestUnit, BestUnitTTD, BestUnitSpellToCast = Value, Value:TimeToDie(), S.Havoc;
-              end	
-            end
-            if BestUnit then
-              if HR.CastLeftNameplate(BestUnit, BestUnitSpellToCast) then return ""; end
-            end
-          end
-          
+
           -- actions+=/life_tap,if=talent.empowered_life_tap.enabled&buff.empowered_life_tap.remains<=gcd
           if S.LifeTap:IsCastable() and S.EmpoweredLifeTap:IsAvailable() and Player:BuffRemainsP(S.EmpoweredLifeTapBuff) == 0 then
             if HR.Cast(S.LifeTap, Settings.Commons.GCDasOffGCD.LifeTap) then return ""; end
@@ -717,10 +659,7 @@
           end
           
           -- actions+=/rain_of_fire,if=active_enemies>=6&talent.wreak_havoc.enabled
-          if HR.AoEON() and S.RainOfFire:IsAvailable() and Cache.EnemiesCount[range] >= 6 and S.WreakHavoc:IsAvailable() and FutureShard() >= 3 then
-            if HR.Cast(CastRainOfFire) then return ""; end
-          end
-          
+
           -- actions+=/life_tap,if=talent.empowered_life_tap.enabled&buff.empowered_life_tap.remains<duration*0.3
           if S.LifeTap:IsCastable() and S.EmpoweredLifeTap:IsAvailable() and Player:BuffRefreshableCP(S.EmpoweredLifeTapBuff) then
             if HR.Cast(S.LifeTap, Settings.Commons.GCDasOffGCD.LifeTap) then return ""; end
