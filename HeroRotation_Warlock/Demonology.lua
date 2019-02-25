@@ -48,6 +48,7 @@ Spell.Warlock.Demonology = {
   BloodFury                             = Spell(20572),
   Fireblood                             = Spell(265221),
   ExplosivePotential                    = Spell(275395),
+  BalefulInvocation                     = Spell(287059),
   DemonicConsumption                    = Spell(267215),
 };
 local S = Spell.Warlock.Demonology;
@@ -146,7 +147,7 @@ local function APL()
   end
   DconEpOpener = function()
     -- hand_of_guldan,line_cd=30
-    if S.HandofGuldan:IsCastableP() then
+    if S.HandofGuldan:IsCastableP() and (HL.CombatTime() < 5 and Player:SoulShardsP() > 2) then
       if HR.Cast(S.HandofGuldan) then return "hand_of_guldan 18"; end
     end
     -- implosion,if=buff.wild_imps.stack>2&buff.explosive_potential.down
@@ -154,7 +155,7 @@ local function APL()
       if HR.Cast(S.Implosion) then return "implosion 20"; end
     end
     -- doom,line_cd=30
-    if S.Doom:IsCastableP() then
+    if S.Doom:IsCastableP() and (Target:DebuffRefreshableCP(S.DoomDebuff)) then
       if HR.Cast(S.Doom) then return "doom 26"; end
     end
     -- demonic_strength
