@@ -24,7 +24,7 @@ Spell.Priest.Shadow = {
   WhispersoftheDamned                   = Spell(275722),
   SearingDialogue                       = Spell(272788),
   DeathThroes                           = Spell(278659),
-  ThoughtHarvester                      = Spell(273319),
+  ThoughtHarvester                      = Spell(288340),
   SpitefulApparitions                   = Spell(277682),
   ShadowformBuff                        = Spell(232698),
   Shadowform                            = Spell(232698),
@@ -35,13 +35,14 @@ Spell.Priest.Shadow = {
   DarkAscension                         = Spell(280711),
   VoidformBuff                          = Spell(194249),
   MindSear                              = Spell(48045),
-  HarvestedThoughtsBuff                 = Spell(273321),
+  HarvestedThoughtsBuff                 = Spell(288343),
   VoidBolt                              = Spell(205448),
   ShadowWordDeath                       = Spell(32379),
   SurrenderToMadness                    = Spell(193223),
   DarkVoid                              = Spell(263346),
   ShadowWordPainDebuff                  = Spell(589),
   Mindbender                            = Spell(200174),
+  Shadowfiend                           = Spell(34433),
   ShadowCrash                           = Spell(205385),
   ShadowWordPain                        = Spell(589),
   Misery                                = Spell(238558),
@@ -130,11 +131,17 @@ end
 local function EvaluateCycleMindSear169(TargetUnit)
   return Cache.EnemiesCount[40] > 1
 end
+
+S.MindbenderDefault = S.Mindbender
+local function UpdateMindbenderID()
+  S.Mindbender = S.MindbenderDefault:IsAvailable() and S.MindbenderDefault or S.Shadowfiend
+end
 --- ======= ACTION LISTS =======
 local function APL()
   local Precombat, Aoe, Cleave, Single
   UpdateRanges()
   Everyone.AoEToggleEnemiesUpdate()
+  UpdateMindbenderID()
   Precombat = function()
     -- flask
     -- food
@@ -166,7 +173,7 @@ local function APL()
     end
     -- shadowform,if=!buff.shadowform.up
     if S.Shadowform:IsCastableP() and Player:BuffDownP(S.ShadowformBuff) and (not Player:BuffP(S.ShadowformBuff)) then
-      if HR.Cast(S.Shadowform) then return "shadowform 48"; end
+      if HR.Cast(S.Shadowform, Settings.Shadow.GCDasOffGCD.Shadowform) then return "shadowform 48"; end
     end
     -- mind_blast,if=spell_targets.mind_sear<2|azerite.thought_harvester.rank=0
     if S.MindBlast:IsReadyP() and Everyone.TargetIsValid() and (Cache.EnemiesCount[40] < 2 or S.ThoughtHarvester:AzeriteRank() == 0) and not Player:IsCasting(S.MindBlast) then
@@ -177,7 +184,7 @@ local function APL()
       if HR.Cast(S.ShadowWordVoid) then return "shadow_word_void added 1"; end
     end
     -- vampiric_touch
-    if S.VampiricTouch:IsCastableP() and Player:DebuffDownP(S.VampiricTouchDebuff) and Everyone.TargetIsValid() then
+    if S.VampiricTouch:IsCastableP() and not Player:IsCasting(S.VampiricTouch) and Player:DebuffDownP(S.VampiricTouchDebuff) and Everyone.TargetIsValid() then
       if HR.Cast(S.VampiricTouch) then return "vampiric_touch 58"; end
     end
   end
@@ -208,7 +215,7 @@ local function APL()
     end
     -- surrender_to_madness,if=buff.voidform.stack>10+(10*buff.bloodlust.up)
     if S.SurrenderToMadness:IsReadyP() and (Player:BuffStackP(S.VoidformBuff) > 10 + (10 * num(Player:HasHeroism()))) then
-      if HR.Cast(S.SurrenderToMadness) then return "surrender_to_madness 93"; end
+      if HR.Cast(S.SurrenderToMadness, Settings.Shadow.OffGCDasOffGCD.SurrenderToMadness) then return "surrender_to_madness 93"; end
     end
     -- dark_void,if=raid_event.adds.in>10&(dot.shadow_word_pain.refreshable|target.time_to_die>30)
     if S.DarkVoid:IsReadyP() and (Target:DebuffRefreshableCP(S.ShadowWordPainDebuff) or Target:TimeToDie() > 30) and not Player:IsCasting(S.DarkVoid) then
@@ -216,7 +223,7 @@ local function APL()
     end
     -- mindbender
     if S.Mindbender:IsReadyP() then
-      if HR.Cast(S.Mindbender) then return "mindbender 101"; end
+      if HR.Cast(S.Mindbender, Settings.Shadow.GCDasOffGCD.Mindbender) then return "mindbender 101"; end
     end
     -- mind_blast,target_if=spell_targets.mind_sear<variable.mind_blast_targets
     if S.MindBlast:IsReadyP() and not Player:IsCasting(S.MindBlast) then
@@ -281,7 +288,7 @@ local function APL()
     end
     -- surrender_to_madness,if=buff.voidform.stack>10+(10*buff.bloodlust.up)
     if S.SurrenderToMadness:IsReadyP() and (Player:BuffStackP(S.VoidformBuff) > 10 + (10 * num(Player:HasHeroism()))) then
-      if HR.Cast(S.SurrenderToMadness) then return "surrender_to_madness 200"; end
+      if HR.Cast(S.SurrenderToMadness, Settings.Shadow.OffGCDasOffGCD.SurrenderToMadness) then return "surrender_to_madness 200"; end
     end
     -- dark_void,if=raid_event.adds.in>10
     if S.DarkVoid:IsReadyP() then
@@ -289,7 +296,7 @@ local function APL()
     end
     -- mindbender
     if S.Mindbender:IsReadyP() then
-      if HR.Cast(S.Mindbender) then return "mindbender 206"; end
+      if HR.Cast(S.Mindbender, Settings.Shadow.GCDasOffGCD.Mindbender) then return "mindbender 206"; end
     end
     -- shadow_word_death,if=!buff.voidform.up|(cooldown.shadow_word_death.charges=2&buff.voidform.stack<15)
     if S.ShadowWordDeath:IsReadyP() and ((not Player:BuffP(S.VoidformBuff) or (S.ShadowWordDeath:ChargesP() == 2 and Player:BuffStackP(S.VoidformBuff) < 15))) and Target:HealthPercentage() < ExecuteRange () then
@@ -353,7 +360,7 @@ local function APL()
       return Cleave();
     end
     -- run_action_list,name=single,if=active_enemies=1
-    if (Cache.EnemiesCount[40] == 1) then
+    if (true) then
       return Single();
     end
   end
