@@ -29,7 +29,7 @@ Spell.Hunter.Marksmanship = {
   TrueshotBuff                          = Spell(288613),
   Trueshot                              = Spell(288613),
   AimedShot                             = Spell(19434),
-  UnerringVisionBuff                    = Spell(274446),
+  UnerringVisionBuff                    = Spell(274447),
   UnerringVision                        = Spell(274444),
   CallingtheShots                       = Spell(260404),
   SurgingShots                          = Spell(287707),
@@ -110,39 +110,41 @@ local function APL()
       if HR.Cast(S.SummonPet, Settings.Marksmanship.GCDasOffGCD.SummonPet) then return "summon_pet 3"; end
     end
     -- snapshot_stats
-    -- potion
-    if I.BattlePotionofAgility:IsReady() and Settings.Commons.UsePotions then
-      if HR.CastSuggested(I.BattlePotionofAgility) then return "battle_potion_of_agility 12"; end
-    end
-    -- hunters_mark
-    if S.HuntersMark:IsCastableP() and Target:DebuffDown(S.HuntersMarkDebuff) then
-      if HR.Cast(S.HuntersMark) then return "hunters_mark 14"; end
-    end
-    -- double_tap,precast_time=10
-    if S.DoubleTap:IsCastableP() then
-      if HR.Cast(S.DoubleTap) then return "double_tap 18"; end
-    end
-    -- trueshot,precast_time=1.5,if=active_enemies>2
-    if S.Trueshot:IsCastableP() and Player:BuffDownP(S.TrueshotBuff) and (Cache.EnemiesCount[40] > 2) then
-      if HR.Cast(S.Trueshot, Settings.Marksmanship.GCDasOffGCD.Trueshot) then return "trueshot 20"; end
-    end
-    -- aimed_shot,if=active_enemies<3
-    if S.AimedShot:IsReadyP() and (Hunter.GetSplashCount(Target, 10) < 3) then
-      if HR.Cast(S.AimedShot) then return "aimed_shot 38"; end
+    if Everyone.TargetIsValid() then
+      -- potion
+      if I.BattlePotionofAgility:IsReady() and Settings.Commons.UsePotions then
+        if HR.CastSuggested(I.BattlePotionofAgility) then return "battle_potion_of_agility 12"; end
+      end
+      -- hunters_mark
+      if S.HuntersMark:IsCastableP() and Target:DebuffDown(S.HuntersMarkDebuff) then
+        if HR.Cast(S.HuntersMark, Settings.Marksmanship.GCDasOffGCD.HuntersMark) then return "hunters_mark 14"; end
+      end
+      -- double_tap,precast_time=10
+      if S.DoubleTap:IsCastableP() then
+        if HR.Cast(S.DoubleTap, Settings.Marksmanship.GCDasOffGCD.DoubleTap) then return "double_tap 18"; end
+      end
+      -- trueshot,precast_time=1.5,if=active_enemies>2
+      if S.Trueshot:IsCastableP() and Player:BuffDownP(S.TrueshotBuff) and (Cache.EnemiesCount[40] > 2) then
+        if HR.Cast(S.Trueshot, Settings.Marksmanship.GCDasOffGCD.Trueshot) then return "trueshot 20"; end
+      end
+      -- aimed_shot,if=active_enemies<3
+      if S.AimedShot:IsReadyP() and (Hunter.GetSplashCount(Target, 10) < 3) then
+        if HR.Cast(S.AimedShot) then return "aimed_shot 38"; end
+      end
     end
   end
   Cds = function()
     -- hunters_mark,if=debuff.hunters_mark.down
     if S.HuntersMark:IsCastableP() and (Target:DebuffDown(S.HuntersMarkDebuff)) then
-      if HR.Cast(S.HuntersMark) then return "hunters_mark 46"; end
+      if HR.Cast(S.HuntersMark, Settings.Marksmanship.GCDasOffGCD.HuntersMark) then return "hunters_mark 46"; end
     end
     -- double_tap,if=target.time_to_die<15|cooldown.aimed_shot.remains<gcd&(buff.trueshot.up&(buff.unerring_vision.stack>7|!azerite.unerring_vision.enabled)|!talent.calling_the_shots.enabled)&(!azerite.surging_shots.enabled&!talent.streamline.enabled&!azerite.focused_fire.enabled)
     if S.DoubleTap:IsCastableP() and (Target:TimeToDie() < 15 or S.AimedShot:CooldownRemainsP() < Player:GCD() and (Player:BuffP(S.TrueshotBuff) and (Player:BuffStackP(S.UnerringVisionBuff) > 7 or not S.UnerringVision:AzeriteEnabled()) or not S.CallingtheShots:IsAvailable()) and (not S.SurgingShots:AzeriteEnabled() and not S.Streamline:IsAvailable() and not S.FocusedFire:AzeriteEnabled())) then
-      if HR.Cast(S.DoubleTap) then return "double_tap 50"; end
+      if HR.Cast(S.DoubleTap, Settings.Marksmanship.GCDasOffGCD.DoubleTap) then return "double_tap 50"; end
     end
     -- double_tap,if=cooldown.rapid_fire.remains<gcd&(buff.trueshot.up&(buff.unerring_vision.stack>7|!azerite.unerring_vision.enabled)|!talent.calling_the_shots.enabled)&(azerite.surging_shots.enabled|talent.streamline.enabled|azerite.focused_fire.enabled)
     if S.DoubleTap:IsCastableP() and (S.RapidFire:CooldownRemainsP() < Player:GCD() and (Player:BuffP(S.TrueshotBuff) and (Player:BuffStackP(S.UnerringVisionBuff) > 7 or not S.UnerringVision:AzeriteEnabled()) or not S.CallingtheShots:IsAvailable()) and (S.SurgingShots:AzeriteEnabled() or S.Streamline:IsAvailable() or S.FocusedFire:AzeriteEnabled())) then
-      if HR.Cast(S.DoubleTap) then return "double_tap 68"; end
+      if HR.Cast(S.DoubleTap, Settings.Marksmanship.GCDasOffGCD.DoubleTap) then return "double_tap 68"; end
     end
     -- berserking,if=cooldown.trueshot.remains>60
     if S.Berserking:IsCastableP() and HR.CDsON() and (S.Trueshot:CooldownRemainsP() > 60) then
