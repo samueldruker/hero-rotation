@@ -35,6 +35,7 @@ Spell.Mage.Arcane = {
   RuneofPowerBuff                       = Spell(116014),
   ArcanePowerBuff                       = Spell(12042),
   RuleofThreesBuff                      = Spell(264774),
+  EquipoiseBuff                         = Spell(264352),
   Overpowered                           = Spell(155147),
   LightsJudgment                        = Spell(255647),
   RuneofPower                           = Spell(116011),
@@ -167,9 +168,9 @@ local function APL()
     if S.SummonArcaneFamiliar:IsCastableP() and Player:BuffDownP(S.SummonArcaneFamiliarBuff) then
       if HR.Cast(S.SummonArcaneFamiliar) then return "summon_arcane_familiar 7"; end
     end
-    -- variable,name=conserve_mana,op=set,value=60
-    if (true) then
-      VarConserveMana = 60
+    -- variable,name=conserve_mana,op=set,value=60+20*azerite.equipoise.enabled
+    if (Player:BuffP(S.EquipoiseBuff)) then
+      VarConserveMana = 80
     end
     -- snapshot_stats
     -- mirror_image
