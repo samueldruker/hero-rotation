@@ -71,14 +71,12 @@ local Settings = {
   Demonology = HR.GUISettings.APL.Warlock.Demonology
 };
 
-
 local EnemyRanges = {40}
 local function UpdateRanges()
   for _, i in ipairs(EnemyRanges) do
     HL.GetEnemies(i);
   end
 end
-
 
 local function num(val)
   if val then return 1 else return 0 end
@@ -111,11 +109,13 @@ end
 local function EvaluateCycleDoom162(TargetUnit)
   return TargetUnit:DebuffRefreshableCP(S.DoomDebuff)
 end
+
 --- ======= ACTION LISTS =======
 local function APL()
   local Precombat, BuildAShard, DconEpOpener, Implosion, NetherPortal, NetherPortalActive, NetherPortalBuilding
   UpdateRanges()
   Everyone.AoEToggleEnemiesUpdate()
+  UpdatePetTable()
   Precombat = function()
     -- flask
     -- food
@@ -149,7 +149,7 @@ local function APL()
   end
   DconEpOpener = function()
     -- hand_of_guldan,line_cd=30
-    if S.HandofGuldan:IsCastableP() and (HL.CombatTime() < 5 and Player:SoulShardsP() > 2) then
+    if S.HandofGuldan:IsCastableP() and (HL.CombatTime() < 2 and Player:SoulShardsP() > 2) then
       if HR.Cast(S.HandofGuldan) then return "hand_of_guldan 18"; end
     end
     -- implosion,if=buff.wild_imps.stack>2&buff.explosive_potential.down
@@ -162,7 +162,7 @@ local function APL()
     end
     -- demonic_strength
     if S.DemonicStrength:IsCastableP() then
-      if HR.Cast(S.DemonicStrength) then return "demonic_strength 28"; end
+      if HR.Cast(S.DemonicStrength, Settings.Demonology.GCDasOffGCD.DemonicStrength) then return "demonic_strength 28"; end
     end
     -- bilescourge_bombers
     if S.BilescourgeBombers:IsCastableP() then
@@ -385,7 +385,7 @@ local function APL()
     end
     -- demonic_strength,if=(buff.wild_imps.stack<6|buff.demonic_power.up)|spell_targets.implosion<2
     if S.DemonicStrength:IsCastableP() and ((WildImpsCount() < 6 or Player:BuffP(S.DemonicPowerBuff)) or Cache.EnemiesCount[40] < 2) then
-      if HR.Cast(S.DemonicStrength) then return "demonic_strength 371"; end
+      if HR.Cast(S.DemonicStrength, Settings.Demonology.GCDasOffGCD.DemonicStrength) then return "demonic_strength 371"; end
     end
     -- call_action_list,name=nether_portal,if=talent.nether_portal.enabled&spell_targets.implosion<=2
     if (S.NetherPortal:IsAvailable() and Cache.EnemiesCount[40] <= 2) then
