@@ -268,7 +268,8 @@
         end
         
         -- Clear the imp table upon Implosion cast
-        if SpellID == 196277 then
+        -- if SpellID == 196277 then
+        if SourceGUID == Player:GUID() and ( SpellID == 196277 or SpellID == 265187 and Spell(267215):IsAvailable() ) then
           for key, petTable in pairs(HL.GuardiansTable.Pets) do
             if petTable.name == "Wild Imp" then
               HL.GuardiansTable.Pets[key] = nil
