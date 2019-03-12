@@ -301,16 +301,9 @@
             end
           end
         end
-<<<<<<< HEAD
-        
-        -- Clear the imp table upon Implosion cast
-        -- if SpellID == 196277 then
-        if SourceGUID == Player:GUID() and ( SpellID == 196277 or SpellID == 265187 and Spell(267215):IsAvailable() ) then
-=======
 
         -- Clear the imp table upon Implosion cast or Demonic Tyrant cast if Demonic Consumption is talented
         if SourceGUID == Player:GUID() and (SpellID == 196277 or (SpellID == 265187 and Spell(267215):IsAvailable())) then
->>>>>>> 96393a6394310de76e3d2446e24db8e082167675
           for key, petTable in pairs(HL.GuardiansTable.Pets) do
             if petTable.name == "Wild Imp" then
               HL.GuardiansTable.Pets[key] = nil
