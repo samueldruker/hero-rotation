@@ -63,8 +63,10 @@ local tableinsert = table.insert;
     ShurikenTornado                       = Spell(277925),
     Subterfuge                            = Spell(108208),
     Vigor                                 = Spell(14983),
+    Weaponmaster                          = Spell(193537),
     -- Azerite Traits
     BladeInTheShadows                     = Spell(275896),
+    Inevitability                         = Spell(278683),
     NightsVengeancePower                  = Spell(273418),
     NightsVengeanceBuff                   = Spell(273424),
     TheFirstDance                         = Spell(278681),
@@ -162,7 +164,10 @@ local function UsePriorityRotation()
   if Cache.EnemiesCount[10] < 2 then
     return false
   end
-  if Settings.Subtlety.AlwaysUsePriorityRotation then
+  if Settings.Subtlety.UsePriorityRotation == "Always" then
+    return true
+  end
+  if Settings.Subtlety.UsePriorityRotation == "On Bosses" and Target:IsInBossList() then
     return true
   end
   -- Zul Mythic
@@ -278,9 +283,10 @@ end
 -- ReturnSpellOnly and StealthSpell parameters are to Predict Finisher in case of Stealth Macros
 local function Stealthed (ReturnSpellOnly, StealthSpell)
   local StealthBuff = Player:Buff(Stealth) or (StealthSpell and StealthSpell:ID() == Stealth:ID())
-  -- # If stealth is up, we really want to use Shadowstrike to benefits from the passive bonus, even if we are at max cp (from the precombat MfD).
-  -- actions.stealthed=shadowstrike,if=buff.stealth.up
-  if StealthBuff and S.Shadowstrike:IsCastable() and (Target:IsInRange(S.Shadowstrike) or IsInMeleeRange()) then
+  local VanishBuffCheck = Player:Buff(VanishBuff) or (StealthSpell and StealthSpell:ID() == S.Vanish:ID())
+  -- actions.stealthed=shadowstrike,if=(talent.find_weakness.enabled|spell_targets.shuriken_storm<3)&(buff.stealth.up|buff.vanish.up)
+  if S.Shadowstrike:IsCastable() and (Target:IsInRange(S.Shadowstrike) or IsInMeleeRange())
+    and (S.FindWeakness:IsAvailable() or Cache.EnemiesCount[10] < 3) and (StealthBuff or VanishBuffCheck) then
     if ReturnSpellOnly then
       return S.Shadowstrike
     else
@@ -299,6 +305,14 @@ local function Stealthed (ReturnSpellOnly, StealthSpell)
       return S.Shadowstrike
     else
       if HR.Cast(S.Shadowstrike) then return "Cast Shadowstrike (3T BitS)"; end
+    end
+  end
+  -- actions.stealthed+=/shadowstrike,if=variable.use_priority_rotation&(talent.find_weakness.enabled&debuff.find_weakness.remains<1|talent.weaponmaster.enabled&spell_targets.shuriken_storm<=4|azerite.inevitability.enabled&buff.symbols_of_death.up&spell_targets.shuriken_storm<=3+azerite.blade_in_the_shadows.enabled)
+  if S.Shadowstrike:IsCastableP() and UsePriorityRotation() and (S.FindWeakness:IsAvailable() and Target:DebuffRemainsP(S.FindWeaknessDebuff) < 1 or S.Weaponmaster:IsAvailable() and Cache.EnemiesCount[10] <= 4 or S.Inevitability:AzeriteEnabled() and Player:BuffP(S.SymbolsofDeath) and Cache.EnemiesCount[10] <= 3 + num(S.BladeInTheShadows:AzeriteEnabled())) then
+    if ReturnSpellOnly then
+      return S.Shadowstrike
+    else
+      if HR.Cast(S.Shadowstrike) then return "Cast Shadowstrike (Prio Rotation)"; end
     end
   end
   -- actions.stealthed+=/shuriken_storm,if=spell_targets>=3
@@ -423,35 +437,41 @@ end
 -- # Stealth Cooldowns
 local function Stealth_CDs ()
   if IsInMeleeRange() then
-    -- actions.stealth_cds+=/vanish,if=!variable.shd_threshold&debuff.find_weakness.remains<1&combo_points.deficit>1
+    -- actions.stealth_cds+=/vanish,if=!variable.shd_threshold&combo_points.deficit>1&debuff.find_weakness.remains<1
     if HR.CDsON() and S.Vanish:IsCastable() and S.ShadowDance:TimeSinceLastDisplay() > 0.3 and S.Shadowmeld:TimeSinceLastDisplay() > 0.3 and not Player:IsTanking(Target)
-      and not ShD_Threshold() and Target:DebuffRemainsP(S.FindWeaknessDebuff) < 1 and Player:ComboPointsDeficit() > 1 then
+      and not ShD_Threshold() and Player:ComboPointsDeficit() > 1 and Target:DebuffRemainsP(S.FindWeaknessDebuff) < 1 then
       if StealthMacro(S.Vanish) then return "Vanish Macro"; end
     end
-    -- actions.stealth_cds+=/shadowmeld,if=energy>=40&energy.deficit>=10&!variable.shd_threshold&debuff.find_weakness.remains<1&combo_points.deficit>1
+    -- actions.stealth_cds+=/shadowmeld,if=energy>=40&energy.deficit>=10&!variable.shd_threshold&combo_points.deficit>1&debuff.find_weakness.remains<1
     if HR.CDsON() and S.Shadowmeld:IsCastable() and S.ShadowDance:TimeSinceLastDisplay() > 0.3 and S.Vanish:TimeSinceLastDisplay() > 0.3 and not Player:IsTanking(Target)
       and GetUnitSpeed("player") == 0 and Player:EnergyDeficitPredicted() > 10
-      and not ShD_Threshold() and Target:DebuffRemainsP(S.FindWeaknessDebuff) < 1 and Player:ComboPointsDeficit() > 1 then
+      and not ShD_Threshold() and Player:ComboPointsDeficit() > 1 and Target:DebuffRemainsP(S.FindWeaknessDebuff) < 1 then
       -- actions.stealth_cds+=/pool_resource,for_next=1,extra_amount=40
       if Player:Energy() < 40 then
         if HR.Cast(S.PoolEnergy) then return "Pool for Shadowmeld"; end
       end
       if StealthMacro(S.Shadowmeld) then return "Shadowmeld Macro"; end
     end
-    -- actions.stealth_cds+=/shadow_dance,if=(!talent.dark_shadow.enabled|dot.nightblade.remains>=5+talent.subterfuge.enabled)&(!talent.nightstalker.enabled&!talent.dark_shadow.enabled|!variable.use_priority_rotation|combo_points.deficit<=1+2*azerite.the_first_dance.enabled)&(variable.shd_threshold|buff.symbols_of_death.remains>=1.2|spell_targets.shuriken_storm>=4&cooldown.symbols_of_death.remains>10)
+    -- actions.stealth_cds+=/variable,name=shd_combo_points,value=combo_points.deficit>=4
+    local ShdComboPoints = Player:ComboPointsDeficit() >= 4;
+    -- actions.stealth_cds+=/variable,name=shd_combo_points,value=combo_points.deficit<=1+2*azerite.the_first_dance.enabled,if=variable.use_priority_rotation&(talent.nightstalker.enabled|talent.dark_shadow.enabled)
+    if UsePriorityRotation() and (S.Nightstalker:IsAvailable() or S.DarkShadow:IsAvailable()) then
+      ShdComboPoints = Player:ComboPointsDeficit() <= 1 + 2 * num(S.TheFirstDance:AzeriteEnabled());
+    end
+    -- actions.stealth_cds+=/shadow_dance,if=variable.shd_combo_points&(!talent.dark_shadow.enabled|dot.nightblade.remains>=5+talent.subterfuge.enabled)&(variable.shd_threshold|buff.symbols_of_death.remains>=1.2|spell_targets.shuriken_storm>=4&cooldown.symbols_of_death.remains>10)
     if (HR.CDsON() or (S.ShadowDance:ChargesFractional() >= Settings.Subtlety.ShDEcoCharge - (S.DarkShadow:IsAvailable() and 0.75 or 0)))
       and S.ShadowDance:IsCastable() and S.Vanish:TimeSinceLastDisplay() > 0.3
       and S.ShadowDance:TimeSinceLastDisplay() ~= 0 and S.Shadowmeld:TimeSinceLastDisplay() > 0.3 and S.ShadowDance:Charges() >= 1
+      and ShdComboPoints
       and (not S.DarkShadow:IsAvailable() or Target:DebuffRemainsP(S.Nightblade) >= 5 + num(S.Subterfuge:IsAvailable()))
-      and (not S.Nightstalker:IsAvailable() and not S.DarkShadow:IsAvailable() or not UsePriorityRotation() or Player:ComboPointsDeficit() <= 1 + 2 * num(S.TheFirstDance:AzeriteEnabled()))
       and (ShD_Threshold() or Player:BuffRemainsP(S.SymbolsofDeath) >= 1.2 or (Cache.EnemiesCount[10] >= 4 and S.SymbolsofDeath:CooldownRemainsP() > 10)) then
       if StealthMacro(S.ShadowDance) then return "ShadowDance Macro 1"; end
     end
-    -- actions.stealth_cds+=/shadow_dance,if=target.time_to_die<cooldown.symbols_of_death.remains
+    -- actions.stealth_cds+=/shadow_dance,if=variable.shd_combo_points&target.time_to_die<cooldown.symbols_of_death.remains&!raid_event.adds.up
     if (HR.CDsON() or (S.ShadowDance:ChargesFractional() >= Settings.Subtlety.ShDEcoCharge - (S.DarkShadow:IsAvailable() and 0.75 or 0)))
       and S.ShadowDance:IsCastable() and MayBurnShadowDance() and S.Vanish:TimeSinceLastDisplay() > 0.3
       and S.ShadowDance:TimeSinceLastDisplay() ~= 0 and S.Shadowmeld:TimeSinceLastDisplay() > 0.3 and S.ShadowDance:Charges() >= 1
-      and Target:TimeToDie() < S.SymbolsofDeath:CooldownRemainsP() then
+      and ShdComboPoints and Target:TimeToDie() < S.SymbolsofDeath:CooldownRemainsP() then
       if StealthMacro(S.ShadowDance) then return "ShadowDance Macro 2"; end
     end
   end
@@ -628,17 +648,11 @@ local function APL ()
         if ShouldReturn then return "Stealth CDs: (Priority Rotation)" .. ShouldReturn; end
       end
 
-      -- # Consider using a Stealth CD when reaching the energy threshold and having space for at least 4 CP
-      -- actions+=/call_action_list,name=stealth_cds,if=energy.deficit<=variable.stealth_threshold&combo_points.deficit>=4
-      if Player:EnergyDeficit() <= Stealth_Threshold() and Player:ComboPointsDeficit() >= 4 then
+      -- # Consider using a Stealth CD when reaching the energy threshold
+      -- actions+=/call_action_list,name=stealth_cds,if=energy.deficit<=variable.stealth_threshold
+      if Player:EnergyDeficit() <= Stealth_Threshold() then
         local ShouldReturn = Stealth_CDs();
         if ShouldReturn then return "Stealth CDs: " .. ShouldReturn; end
-      end
-      -- actions+=/call_action_list,name=stealth_cds,if=energy.deficit<=variable.stealth_threshold&talent.dark_shadow.enabled&talent.secret_technique.enabled&cooldown.secret_technique.up&spell_targets.shuriken_storm<=4
-      if Player:EnergyDeficit() <= Stealth_Threshold() and S.DarkShadow:IsAvailable() and S.SecretTechnique:IsAvailable() and S.SecretTechnique:CooldownUp()
-        and Cache.EnemiesCount[10] <= 4 then
-        local ShouldReturn = Stealth_CDs();
-        if ShouldReturn then return "Stealth CDs: (SecTec) " .. ShouldReturn; end
       end
 
       -- # Finish at 4+ without DS, 5+ with DS (outside stealth)
@@ -689,7 +703,7 @@ end
 
 HR.SetAPL(261, APL);
 
--- Last Update: 2018-12-10
+-- Last Update: 2019-03-09
 
 -- # Executed before combat begins. Accepts non-harmful actions only.
 -- actions.precombat=flask
@@ -716,10 +730,8 @@ HR.SetAPL(261, APL);
 -- actions+=/call_action_list,name=stealth_cds,if=variable.use_priority_rotation
 -- # Used to define when to use stealth CDs or builders
 -- actions+=/variable,name=stealth_threshold,value=25+talent.vigor.enabled*35+talent.master_of_shadows.enabled*25+talent.shadow_focus.enabled*20+talent.alacrity.enabled*10+15*(spell_targets.shuriken_storm>=3)
--- # Consider using a Stealth CD when reaching the energy threshold and having space for at least 4 CP
--- actions+=/call_action_list,name=stealth_cds,if=energy.deficit<=variable.stealth_threshold&combo_points.deficit>=4
--- # With Dark Shadow, also use a Stealth CD when reaching the energy threshold and Secret Technique is ready. Only a gain up to 4 targets.
--- actions+=/call_action_list,name=stealth_cds,if=energy.deficit<=variable.stealth_threshold&talent.dark_shadow.enabled&talent.secret_technique.enabled&cooldown.secret_technique.up&spell_targets.shuriken_storm<=4
+-- # Consider using a Stealth CD when reaching the energy threshold
+-- actions+=/call_action_list,name=stealth_cds,if=energy.deficit<=variable.stealth_threshold
 -- # Finish at 4+ without DS, 5+ with DS (outside stealth)
 -- actions+=/call_action_list,name=finish,if=combo_points.deficit<=1|target.time_to_die<=1&combo_points>=3
 -- # With DS also finish at 4+ against exactly 4 targets (outside stealth)
@@ -756,23 +768,30 @@ HR.SetAPL(261, APL);
 -- # Helper Variable
 -- actions.stealth_cds=variable,name=shd_threshold,value=cooldown.shadow_dance.charges_fractional>=1.75
 -- # Vanish unless we are about to cap on Dance charges. Only when Find Weakness is about to run out.
--- actions.stealth_cds+=/vanish,if=!variable.shd_threshold&debuff.find_weakness.remains<1&combo_points.deficit>1
+-- actions.stealth_cds+=/vanish,if=!variable.shd_threshold&combo_points.deficit>1&debuff.find_weakness.remains<1
 -- # Pool for Shadowmeld + Shadowstrike unless we are about to cap on Dance charges. Only when Find Weakness is about to run out.
 -- actions.stealth_cds+=/pool_resource,for_next=1,extra_amount=40
--- actions.stealth_cds+=/shadowmeld,if=energy>=40&energy.deficit>=10&!variable.shd_threshold&debuff.find_weakness.remains<1&combo_points.deficit>1
--- # With Dark Shadow only Dance when Nightblade will stay up. Use during Symbols or above threshold. Only before finishers if we have amp talents and priority rotation.
--- actions.stealth_cds+=/shadow_dance,if=(!talent.dark_shadow.enabled|dot.nightblade.remains>=5+talent.subterfuge.enabled)&(!talent.nightstalker.enabled&!talent.dark_shadow.enabled|!variable.use_priority_rotation|combo_points.deficit<=1+2*azerite.the_first_dance.enabled)&(variable.shd_threshold|buff.symbols_of_death.remains>=1.2|spell_targets.shuriken_storm>=4&cooldown.symbols_of_death.remains>10)
--- actions.stealth_cds+=/shadow_dance,if=target.time_to_die<cooldown.symbols_of_death.remains&!raid_event.adds.up
+-- actions.stealth_cds+=/shadowmeld,if=energy>=40&energy.deficit>=10&!variable.shd_threshold&combo_points.deficit>1&debuff.find_weakness.remains<1
+-- # CP requirement: Dance at low CP by default.
+-- actions.stealth_cds+=/variable,name=shd_combo_points,value=combo_points.deficit>=4
+-- # CP requirement: Dance only before finishers if we have amp talents and priority rotation.
+-- actions.stealth_cds+=/variable,name=shd_combo_points,value=combo_points.deficit<=1+2*azerite.the_first_dance.enabled,if=variable.use_priority_rotation&(talent.nightstalker.enabled|talent.dark_shadow.enabled)
+-- # With Dark Shadow only Dance when Nightblade will stay up. Use during Symbols or above threshold.
+-- actions.stealth_cds+=/shadow_dance,if=variable.shd_combo_points&(!talent.dark_shadow.enabled|dot.nightblade.remains>=5+talent.subterfuge.enabled)&(variable.shd_threshold|buff.symbols_of_death.remains>=1.2|spell_targets.shuriken_storm>=4&cooldown.symbols_of_death.remains>10)
+-- # Burn remaining Dances before the target dies if SoD won't be ready in time.
+-- actions.stealth_cds+=/shadow_dance,if=variable.shd_combo_points&target.time_to_die<cooldown.symbols_of_death.remains&!raid_event.adds.up
 --
 -- # Stealthed Rotation
--- # If stealth is up, we really want to use Shadowstrike to benefits from the passive bonus, even if we are at max cp (from the precombat MfD).
--- actions.stealthed=shadowstrike,if=buff.stealth.up
+-- # If Stealth/vanish are up, use Shadowstrike to benefit from the passive bonus and Find Weakness, even if we are at max CP (from the precombat MfD).
+-- actions.stealthed=shadowstrike,if=(talent.find_weakness.enabled|spell_targets.shuriken_storm<3)&(buff.stealth.up|buff.vanish.up)
 -- # Finish at 4+ CP without DS, 5+ with DS, and 6 with DS after Vanish or The First Dance and no Dark Shadow + no Subterfuge
 -- actions.stealthed+=/call_action_list,name=finish,if=combo_points.deficit<=1-(talent.deeper_stratagem.enabled&(buff.vanish.up|azerite.the_first_dance.enabled&!talent.dark_shadow.enabled&!talent.subterfuge.enabled&spell_targets.shuriken_storm<3))
 -- # At 2 targets with Secret Technique keep up Find Weakness by cycling Shadowstrike.
 -- actions.stealthed+=/shadowstrike,cycle_targets=1,if=talent.secret_technique.enabled&talent.find_weakness.enabled&debuff.find_weakness.remains<1&spell_targets.shuriken_storm=2&target.time_to_die-remains>6
 -- # Without Deeper Stratagem and 3 Ranks of Blade in the Shadows it is worth using Shadowstrike on 3 targets.
 -- actions.stealthed+=/shadowstrike,if=!talent.deeper_stratagem.enabled&azerite.blade_in_the_shadows.rank=3&spell_targets.shuriken_storm=3
+-- # For priority rotation, use Shadowstrike over Storm 1) with WM against up to 4 targets, 2) if FW is running off (on any amount of targets), or 3) to maximize SoD extension with Inevitability on 3 targets (4 with BitS).
+-- actions.stealthed+=/shadowstrike,if=variable.use_priority_rotation&(talent.find_weakness.enabled&debuff.find_weakness.remains<1|talent.weaponmaster.enabled&spell_targets.shuriken_storm<=4|azerite.inevitability.enabled&buff.symbols_of_death.up&spell_targets.shuriken_storm<=3+azerite.blade_in_the_shadows.enabled)
 -- actions.stealthed+=/shuriken_storm,if=spell_targets>=3
 -- actions.stealthed+=/shadowstrike
 --

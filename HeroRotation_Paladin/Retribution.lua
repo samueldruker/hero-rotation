@@ -121,13 +121,15 @@ local function APL()
     -- food
     -- augmentation
     -- snapshot_stats
-    -- potion
-    if I.BattlePotionofStrength:IsReady() and Settings.Commons.UsePotions then
-      if HR.CastSuggested(I.BattlePotionofStrength) then return "battle_potion_of_strength 4"; end
-    end
-    -- arcane_torrent,if=!talent.wake_of_ashes.enabled
-    if S.ArcaneTorrent:IsCastableP() and HR.CDsON() and (not S.WakeofAshes:IsAvailable()) then
-      if HR.Cast(S.ArcaneTorrent, Settings.Commons.OffGCDasOffGCD.Racials) then return "arcane_torrent 6"; end
+    if Everyone.TargetIsValid() then
+      -- potion
+      if I.BattlePotionofStrength:IsReady() and Settings.Commons.UsePotions then
+        if HR.CastSuggested(I.BattlePotionofStrength) then return "battle_potion_of_strength 4"; end
+      end
+      -- arcane_torrent,if=!talent.wake_of_ashes.enabled
+      if S.ArcaneTorrent:IsCastableP() and HR.CDsON() and (not S.WakeofAshes:IsAvailable()) then
+        if HR.Cast(S.ArcaneTorrent, Settings.Commons.OffGCDasOffGCD.Racials) then return "arcane_torrent 6"; end
+      end
     end
   end
   Cooldowns = function()
@@ -144,7 +146,7 @@ local function APL()
       if HR.Cast(S.Fireblood, Settings.Commons.OffGCDasOffGCD.Racials) then return "fireblood 22"; end
     end
     -- shield_of_vengeance
-    if S.ShieldofVengeance:IsCastableP() then
+    if S.ShieldofVengeance:IsCastableP() and Settings.Retribution.ShieldofVengeance then
       if HR.CastLeft(S.ShieldofVengeance) then return "shield_of_vengeance 30"; end
     end
     -- avenging_wrath,if=buff.inquisition.up|!talent.inquisition.enabled
@@ -240,7 +242,7 @@ local function APL()
     -- Common to all openers
     -- shield_of_vengeance
     if Opener1 == 0 then
-      if S.ShieldofVengeance:IsCastableP() then
+      if S.ShieldofVengeance:IsCastableP() and Settings.Retribution.ShieldofVengeance then
         if HR.CastLeft(S.ShieldofVengeance) then return "Common Opener 1 - Shield of Vengeance"; end
       else
         Opener1 = 1
@@ -522,6 +524,10 @@ local function APL()
     -- rebuke
     if S.Rebuke:IsCastableP() and Target:IsInterruptible() and Settings.General.InterruptEnabled then
       if HR.CastAnnotated(S.Rebuke, false, "Interrupt") then return "rebuke 218"; end
+    end
+    -- Set VarOpenerDone to 1 if character does not have any level 100 talents
+    if not S.DivinePurpose:IsAvailable() and not S.Crusade:IsAvailable() and not S.Inquisition:IsAvailable() then
+      VarOpenerDone = 1
     end
     -- call_action_list,name=opener
     if VarOpenerDone == 0 then

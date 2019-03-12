@@ -35,6 +35,7 @@ Spell.Mage.Arcane = {
   RuneofPowerBuff                       = Spell(116014),
   ArcanePowerBuff                       = Spell(12042),
   RuleofThreesBuff                      = Spell(264774),
+  EquipoiseBuff                         = Spell(264352),
   Overpowered                           = Spell(155147),
   LightsJudgment                        = Spell(255647),
   RuneofPower                           = Spell(116011),
@@ -167,22 +168,24 @@ local function APL()
     if S.SummonArcaneFamiliar:IsCastableP() and Player:BuffDownP(S.SummonArcaneFamiliarBuff) then
       if HR.Cast(S.SummonArcaneFamiliar) then return "summon_arcane_familiar 7"; end
     end
-    -- variable,name=conserve_mana,op=set,value=60
-    if (true) then
-      VarConserveMana = 60
+    -- variable,name=conserve_mana,op=set,value=60+20*azerite.equipoise.enabled
+    if (Player:BuffP(S.EquipoiseBuff)) then
+      VarConserveMana = 80
     end
     -- snapshot_stats
-    -- mirror_image
-    if S.MirrorImage:IsCastableP() and HR.CDsON() then
-      if HR.Cast(S.MirrorImage) then return "mirror_image 14"; end
-    end
-    -- potion
-    if I.DeadlyGrace:IsReady() and Settings.Commons.UsePotions then
-      if HR.CastSuggested(I.DeadlyGrace) then return "deadly_grace 16"; end
-    end
-    -- arcane_blast
-    if S.ArcaneBlast:IsReadyP() then
-      if HR.Cast(S.ArcaneBlast) then return "arcane_blast 18"; end
+    if Everyone.TargetIsValid() then
+      -- mirror_image
+      if S.MirrorImage:IsCastableP() and HR.CDsON() then
+        if HR.Cast(S.MirrorImage) then return "mirror_image 14"; end
+      end
+      -- potion
+      if I.DeadlyGrace:IsReady() and Settings.Commons.UsePotions then
+        if HR.CastSuggested(I.DeadlyGrace) then return "deadly_grace 16"; end
+      end
+      -- arcane_blast
+      if S.ArcaneBlast:IsReadyP() then
+        if HR.Cast(S.ArcaneBlast) then return "arcane_blast 18"; end
+      end
     end
   end
   Burn = function()

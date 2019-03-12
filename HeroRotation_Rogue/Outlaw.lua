@@ -85,6 +85,7 @@ Item.Rogue.Outlaw = {
   -- Trinkets
   GalecallersBoon       = Item(159614, {13, 14}),
   InvocationOfYulon     = Item(165568, {13, 14}),
+  LustrousGoldenPlumage = Item(159617, {13, 14}),
 };
 local I = Item.Rogue.Outlaw;
 
@@ -294,6 +295,12 @@ local function CDs ()
     -- Trinkets
     -- actions.cds+=/use_item,if=buff.bloodlust.react|target.time_to_die<=20|combo_points.deficit<=2
     if Settings.Commons.UseTrinkets then
+      if I.GalecallersBoon:IsEquipped() and I.GalecallersBoon:IsReady() then
+        HR.CastSuggested(I.GalecallersBoon);
+      end
+      if I.LustrousGoldenPlumage:IsEquipped() and I.LustrousGoldenPlumage:IsReady() then
+        HR.CastSuggested(I.LustrousGoldenPlumage);
+      end
       if I.InvocationOfYulon:IsEquipped() and I.InvocationOfYulon:IsReady() then
         HR.CastSuggested(I.InvocationOfYulon);
       end
@@ -394,10 +401,8 @@ local function Finish ()
 end
 
 local function Build ()
-  -- actions.build=pistol_shot,if=combo_points.deficit>=1+buff.broadside.up+talent.quick_draw.enabled&buff.opportunity.up&(buff.keep_your_wits_about_you.stack<25|buff.deadshot.up)
-  if S.PistolShot:IsCastable(20)
-    and Player:ComboPointsDeficit() >= (1 + (Player:BuffP(S.Broadside) and 1 or 0) + (S.QuickDraw:IsAvailable() and 1 or 0))
-    and Player:BuffP(S.Opportunity) and (Player:BuffStackP(S.KeepYourWitsBuff) < 25 or Player:BuffP(S.DeadshotBuff)) then
+  -- actions.build=pistol_shot,if=buff.opportunity.up&(buff.keep_your_wits_about_you.stack<25|buff.deadshot.up)
+  if S.PistolShot:IsCastable(20) and Player:BuffP(S.Opportunity) and (Player:BuffStackP(S.KeepYourWitsBuff) < 25 or Player:BuffP(S.DeadshotBuff)) then
     if HR.Cast(S.PistolShot) then return "Cast Pistol Shot"; end
   end
   -- actions.build+=/sinister_strike
@@ -482,10 +487,12 @@ local function APL ()
     -- actions+=/call_action_list,name=cds
     ShouldReturn = CDs();
     if ShouldReturn then return "CDs: " .. ShouldReturn; end
-    -- actions+=/call_action_list,name=finish,if=combo_points>=cp_max_spend-(buff.broadside.up+buff.opportunity.up)*(talent.quick_draw.enabled&(!talent.marked_for_death.enabled|cooldown.marked_for_death.remains>1))
+    -- actions+=/run_action_list,name=finish,if=combo_points>=cp_max_spend-(buff.broadside.up+buff.opportunity.up)*(talent.quick_draw.enabled&(!talent.marked_for_death.enabled|cooldown.marked_for_death.remains>1))
     if Player:ComboPoints() >= Rogue.CPMaxSpend() - (num(Player:BuffP(S.Broadside)) + num(Player:BuffP(S.Opportunity))) * num(S.QuickDraw:IsAvailable() and (not S.MarkedforDeath:IsAvailable() or S.MarkedforDeath:CooldownRemainsP() > 1)) then
       ShouldReturn = Finish();
       if ShouldReturn then return "Finish: " .. ShouldReturn; end
+      -- run_action_list forces the return
+      return "Waiting to Finish..."
     end
     -- actions+=/call_action_list,name=build
     ShouldReturn = Build();
@@ -512,7 +519,7 @@ end
 
 HR.SetAPL(260, APL);
 
--- Last Update: 2019-02-06
+-- Last Update: 2019-03-07
 
 -- # Executed before combat begins. Accepts non-harmful actions only.
 -- actions.precombat=flask
@@ -544,7 +551,7 @@ HR.SetAPL(260, APL);
 -- actions+=/call_action_list,name=stealth,if=stealthed.all
 -- actions+=/call_action_list,name=cds
 -- # Finish at maximum CP. Substract one for each Broadside and Opportunity when Quick Draw is selected and MfD is not ready after the next second.
--- actions+=/call_action_list,name=finish,if=combo_points>=cp_max_spend-(buff.broadside.up+buff.opportunity.up)*(talent.quick_draw.enabled&(!talent.marked_for_death.enabled|cooldown.marked_for_death.remains>1))
+-- actions+=/run_action_list,name=finish,if=combo_points>=cp_max_spend-(buff.broadside.up+buff.opportunity.up)*(talent.quick_draw.enabled&(!talent.marked_for_death.enabled|cooldown.marked_for_death.remains>1))
 -- actions+=/call_action_list,name=build
 -- actions+=/arcane_torrent,if=energy.deficit>=15+energy.regen
 -- actions+=/arcane_pulse
@@ -581,5 +588,6 @@ HR.SetAPL(260, APL);
 -- actions.finish+=/dispatch
 --
 -- # Builders
--- actions.build=pistol_shot,if=combo_points.deficit>=1+buff.broadside.up+talent.quick_draw.enabled&buff.opportunity.up&(buff.keep_your_wits_about_you.stack<25|buff.deadshot.up)
+-- # Use Pistol Shot if the Oppotunity buff is up. Avoid using when Keep Your Wits stacks are high unless the Deadshot buff is also up.
+-- actions.build=pistol_shot,if=buff.opportunity.up&(buff.keep_your_wits_about_you.stack<25|buff.deadshot.up)
 -- actions.build+=/sinister_strike
