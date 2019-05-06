@@ -124,6 +124,7 @@ end
 -- GUI Settings
   local Settings = {
     General = HR.GUISettings.General,
+    Commons = HR.GUISettings.APL.DemonHunter.Commons,
     Vengeance = HR.GUISettings.APL.DemonHunter.Vengeance
   };
 
@@ -277,6 +278,8 @@ local function APL ()
 
   --- In Combat
   if Everyone.TargetIsValid() then
+    -- Interrupts
+    Everyone.Interrupt(10, S.Disrupt, Settings.Commons.OffGCDasOffGCD.Disrupt, false);
     if S.CharredFlesh:IsAvailable() then
       ShouldReturn = Brand(); if ShouldReturn then return ShouldReturn; end
     end

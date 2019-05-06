@@ -120,6 +120,7 @@ local I = Item.Shaman.Elemental
 local Settings = {
   General = HR.GUISettings.General,
   Shaman = HR.GUISettings.APL.Shaman,
+  Commons = HR.GUISettings.APL.Shaman.Commons,
   Elemental = HR.GUISettings.APL.Shaman.Elemental
 }
 
@@ -212,9 +213,7 @@ local function APL ()
   end
 
   -- Interrupts
-  if S.WindShear:IsCastableP(30) and Target:IsInterruptible() and Settings.General.InterruptEnabled then
-  if HR.Cast(S.WindShear, Settings.Shaman.Commons.OffGCDasOffGCD.WindShear) then return "Cast WindShear" end
-  end
+  Everyone.Interrupt(30, S.WindShear, Settings.Commons.OffGCDasOffGCD.WindShear, false);
 
   -- In Combat
   if Everyone.TargetIsValid() then
