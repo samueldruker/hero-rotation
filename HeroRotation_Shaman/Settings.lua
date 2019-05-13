@@ -36,11 +36,14 @@
       GCDasOffGCD = {
         -- Abilities
         FeralSpirit = false,
+        Sundering = false,
       },
       EnableFS = true,
       EnableEE = false
     },
     Elemental = {
+      UseSplashData = true,
+      ChainInMain = "Never",
       GCDasOffGCD = {
       -- Abilities
         Stormkeeper = true,
@@ -85,3 +88,4 @@
   CreatePanelOption("CheckButton", CP_Elemental, "APL.Shaman.Enhancement.EnableEE", "Show Earth Elemental in rotation", "Uncheck this if you don't want to see Earth Elemental in the rotation.");
   CreatePanelOption("CheckButton", CP_Elemental, "APL.Shaman.Enhancement.EnableFE", "Show Fire Elemental in rotation", "Uncheck this if you don't want to see Fire Elemental in the rotation.");
   CreatePanelOption("CheckButton", CP_Elemental, "APL.Shaman.Enhancement.EnableSE", "Show Storm Elemental in rotation", "Uncheck this if you don't want to see Storm Elementa in the rotation.");
+  CreatePanelOption("Dropdown", CP_Elemental, "APL.Shaman.Elemental.ChainInMain", {"Never", "Only with Splash Data", "Always"}, "Chain Lightning in the Main Icon", "When to show Chain Lightning in the main icon or as a suggestion");
