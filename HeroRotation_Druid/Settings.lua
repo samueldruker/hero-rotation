@@ -78,11 +78,22 @@
       }
     },
     Guardian = {
+      BarkskinHP = 50,
+      LunarBeamHP = 50,
+      SurvivalInstinctsHP = 30,
+      FrenziedRegenHP = 70,
+      BristlingFurRage = 50,
+      UseSplashData = true,
       -- {Display GCD as OffGCD, ForceReturn}
       GCDasOffGCD = {
+        FrenziedRegen = true,
+        LunarBeam = true,
       },
       -- {Display OffGCD as OffGCD, ForceReturn}
       OffGCDasOffGCD = {
+        Ironfur = true,
+        Barkskin = true,
+        SurvivalInstincts = true,
       }
     },
   };
@@ -94,7 +105,7 @@
   local CP_Druid = CreateChildPanel(ARPanel, "Druid");
   local CP_Balance = CreateChildPanel(CP_Druid, "Balance");
   local CP_Feral = CreateChildPanel(CP_Druid, "Feral");
-  -- local CP_Guardian = CreateChildPanel(CP_Druid, "Guardian");
+  local CP_Guardian = CreateChildPanel(CP_Druid, "Guardian");
 
   CreateARPanelOptions(CP_Druid, "APL.Druid.Commons");
   CreatePanelOption("CheckButton", CP_Druid, "APL.Druid.Commons.UsePotions", "Show Potions", "Enable this if you want the addon to show you when to use potions.");
@@ -111,3 +122,11 @@
   CreatePanelOption("CheckButton", CP_Balance, "APL.Druid.Balance.ShowMoonkinFormOOC", "Show Moonkin Form Out of Combat", "Enable this if you want the addon to show you the Moonkin Form reminder out of combat.");
   CreatePanelOption("CheckButton", CP_Balance, "APL.Druid.Balance.ShowPotion", "Show Potion", "Enable this if you want the addon to show you when to use a potion.");
   CreateARPanelOptions(CP_Balance, "APL.Druid.Balance");
+  --Guardian
+  CreatePanelOption("CheckButton", CP_Guardian, "APL.Druid.Guardian.UseSplashData", "Use Splash Data for AoE", "Only count AoE enemies that are already hit by AoE abilities such as Swipe or Thrash.");
+  CreateARPanelOptions(CP_Guardian, "APL.Druid.Guardian");
+  CreatePanelOption("Slider", CP_Guardian, "APL.Druid.Guardian.BarkskinHP", {0, 100, 1}, "Barkskin HP", "Set the Barkskin HP threshold.");
+  CreatePanelOption("Slider", CP_Guardian, "APL.Druid.Guardian.LunarBeamHP", {0, 100, 1}, "Lunar Beam HP", "Set the Lunar Beam HP threshold.");
+  CreatePanelOption("Slider", CP_Guardian, "APL.Druid.Guardian.FrenziedRegenHP", {0, 100, 1}, "Frenzied Regeneration HP", "Set the Frenzied Regeneration HP threshold.");
+  CreatePanelOption("Slider", CP_Guardian, "APL.Druid.Guardian.SurvivalInstinctsHP", {0, 100, 1}, "Survival Instincts HP", "Set the Survival Instincts HP threshold.");
+  CreatePanelOption("Slider", CP_Guardian, "APL.Druid.Guardian.BristlingFurRage", {0, 100, 1}, "Bristling Fur Rage", "Set the Bristling Fur Rage threshold.");
