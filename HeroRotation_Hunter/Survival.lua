@@ -109,7 +109,6 @@ local function UpdateRanges()
   end
 end
 
-
 local function num(val)
   if val then return 1 else return 0 end
 end
@@ -190,6 +189,12 @@ end
 local function EvaluateTargetIfFilterRaptorStrike239(TargetUnit)
   return TargetUnit:DebuffStackP(S.LatentPoisonDebuff)
 end
+
+HL.RegisterNucleusAbility(187708, 8, 6)                           -- Carve
+HL.RegisterNucleusAbility(212436, 8, 6)                           -- Butchery
+HL.RegisterNucleusAbility({259495, 270335, 270323, 271045}, 8, 6) -- Bombs
+HL.RegisterNucleusAbility(259391, 40, 6)                          -- Chakrams
+
 --- ======= ACTION LISTS =======
 local function APL()
   local Precombat, Cds, Cleave, MbApWfiSt, St, WfiSt

@@ -241,13 +241,20 @@ local function rockslide_enabled()
   return (not freezerburn_enabled() and (S.Boulderfist:IsAvailable() and S.Landslide:IsAvailable() and S.StrengthOfEarth:AzeriteEnabled()))
 end
 
+local EnemyRanges = {40, 10}
+local function UpdateRanges()
+  for _, i in ipairs(EnemyRanges) do
+    HL.GetEnemies(i);
+  end
+end
+
+HL.RegisterNucleusAbility(187874, 8, 6)               -- Crash Lightning
+HL.RegisterNucleusAbility(197214, 11, 6)              -- Sundering
+
 -- APL Main
 local function APL ()
   -- Unit Update
-  HL.GetEnemies(40);      -- LightningBolt, HealingSurge
-  HL.GetEnemies(30);      -- WindShear
-  HL.GetEnemies(10);      -- EarthenSpike
-  HL.GetEnemies("Melee"); -- Melee
+  UpdateRanges()
   Everyone.AoEToggleEnemiesUpdate()
 
   -- Out of Combat

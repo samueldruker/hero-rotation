@@ -67,6 +67,7 @@ local I = Item.Mage.Fire;
 
 -- Rotation Var
 local ShouldReturn; -- Used to get the return string
+local EnemiesCount;
 
 -- GUI Settings
 local Everyone = HR.Commons.Everyone;
@@ -78,10 +79,26 @@ local Settings = {
 
 -- Variables
 
-local EnemyRanges = {40,10}
+local EnemyRanges = {40}
 local function UpdateRanges()
   for _, i in ipairs(EnemyRanges) do
     HL.GetEnemies(i);
+  end
+end
+
+local function GetEnemiesCount(range)
+  -- Unit Update - Update differently depending on if splash data is being used
+  if HR.AoEON() then
+    if Settings.Fire.UseSplashData then
+      HL.GetEnemies(range, nil, true, Target)
+      return Cache.EnemiesCount[range]
+    else
+      UpdateRanges()
+      Everyone.AoEToggleEnemiesUpdate()
+      return Cache.EnemiesCount[40]
+    end
+  else
+    return 1
   end
 end
 
@@ -104,11 +121,18 @@ end
 function S.Firestarter:ActiveRemains()
     return S.Firestarter:IsAvailable() and ((Target:HealthPercentage() > 90) and Target:TimeToX(90, 3) or 0)
 end
+
+HL.RegisterNucleusAbility(157981, 8, 6)               -- Blast Wave
+HL.RegisterNucleusAbility(153561, 8, 6)               -- Meteor
+HL.RegisterNucleusAbility(31661, 8, 6)                -- Dragon's Breath
+HL.RegisterNucleusAbility(44457, 10, 6)               -- Living Bomb
+HL.RegisterNucleusAbility(2120, 8, 6)                 -- Flamestrike
+HL.RegisterNucleusAbility(257541, 8, 6)               -- Phoenix Flames
+
 --- ======= ACTION LISTS =======
 local function APL()
   local Precombat, ActiveTalents, CombustionPhase, RopPhase, StandardRotation
-  UpdateRanges()
-  Everyone.AoEToggleEnemiesUpdate()
+  EnemiesCount = GetEnemiesCount(8)
   Precombat = function()
     -- flask
     -- food
@@ -147,7 +171,7 @@ local function APL()
       if HR.Cast(S.DragonsBreath) then return ""; end
     end
     -- living_bomb,if=active_enemies>1&buff.combustion.down
-    if S.LivingBomb:IsCastableP() and (Cache.EnemiesCount[40] > 1 and Player:BuffDownP(S.CombustionBuff)) then
+    if S.LivingBomb:IsCastableP() and (EnemiesCount > 1 and Player:BuffDownP(S.CombustionBuff)) then
       if HR.Cast(S.LivingBomb) then return ""; end
     end
   end
@@ -190,7 +214,7 @@ local function APL()
     end
     -- use_items
     -- flamestrike,if=((talent.flame_patch.enabled&active_enemies>2)|active_enemies>6)&buff.hot_streak.react
-    if S.Flamestrike:IsCastableP() and (((S.FlamePatch:IsAvailable() and Cache.EnemiesCount[40] > 2) or Cache.EnemiesCount[40] > 6) and bool(Player:BuffStackP(S.HotStreakBuff))) then
+    if S.Flamestrike:IsCastableP() and (((S.FlamePatch:IsAvailable() and EnemiesCount > 2) or EnemiesCount > 6) and bool(Player:BuffStackP(S.HotStreakBuff))) then
       if HR.Cast(S.Flamestrike) then return ""; end
     end
     -- pyroblast,if=buff.pyroclasm.react&buff.combustion.remains>execute_time
@@ -228,7 +252,7 @@ local function APL()
       if HR.Cast(S.RuneofPower, Settings.Fire.GCDasOffGCD.RuneofPower) then return ""; end
     end
     -- flamestrike,if=((talent.flame_patch.enabled&active_enemies>1)|active_enemies>4)&buff.hot_streak.react
-    if S.Flamestrike:IsCastableP() and (((S.FlamePatch:IsAvailable() and Cache.EnemiesCount[40] > 1) or Cache.EnemiesCount[40] > 4) and bool(Player:BuffStackP(S.HotStreakBuff))) then
+    if S.Flamestrike:IsCastableP() and (((S.FlamePatch:IsAvailable() and EnemiesCount > 1) or EnemiesCount > 4) and bool(Player:BuffStackP(S.HotStreakBuff))) then
       if HR.Cast(S.Flamestrike) then return ""; end
     end
     -- pyroblast,if=buff.hot_streak.react
@@ -264,11 +288,11 @@ local function APL()
       if HR.Cast(S.Scorch) then return ""; end
     end
     -- dragons_breath,if=active_enemies>2
-    if S.DragonsBreath:IsCastableP() and (Cache.EnemiesCount[40] > 2) then
+    if S.DragonsBreath:IsCastableP() and (EnemiesCount > 2) then
       if HR.Cast(S.DragonsBreath) then return ""; end
     end
     -- flamestrike,if=(talent.flame_patch.enabled&active_enemies>2)|active_enemies>5
-    if S.Flamestrike:IsCastableP() and ((S.FlamePatch:IsAvailable() and Cache.EnemiesCount[40] > 2) or Cache.EnemiesCount[40] > 5) then
+    if S.Flamestrike:IsCastableP() and ((S.FlamePatch:IsAvailable() and EnemiesCount > 2) or EnemiesCount > 5) then
       if HR.Cast(S.Flamestrike) then return ""; end
     end
     -- fireball
@@ -278,7 +302,7 @@ local function APL()
   end
   StandardRotation = function()
     -- flamestrike,if=((talent.flame_patch.enabled&active_enemies>1)|active_enemies>4)&buff.hot_streak.react
-    if S.Flamestrike:IsCastableP() and (((S.FlamePatch:IsAvailable() and Cache.EnemiesCount[40] > 1) or Cache.EnemiesCount[40] > 4) and bool(Player:BuffStackP(S.HotStreakBuff))) then
+    if S.Flamestrike:IsCastableP() and (((S.FlamePatch:IsAvailable() and EnemiesCount > 1) or EnemiesCount > 4) and bool(Player:BuffStackP(S.HotStreakBuff))) then
       if HR.Cast(S.Flamestrike) then return ""; end
     end
     -- pyroblast,if=buff.hot_streak.react&buff.hot_streak.remains<action.fireball.execute_time
@@ -290,7 +314,7 @@ local function APL()
       if HR.Cast(S.Pyroblast) then return ""; end
     end
     -- phoenix_flames,if=charges_fractional>2.7&active_enemies>2
-    if S.PhoenixFlames:IsCastableP() and (S.PhoenixFlames:ChargesFractional() > 2.7 and Cache.EnemiesCount[40] > 2) then
+    if S.PhoenixFlames:IsCastableP() and (S.PhoenixFlames:ChargesFractional() > 2.7 and EnemiesCount > 2) then
       if HR.Cast(S.PhoenixFlames) then return ""; end
     end
     -- pyroblast,if=buff.hot_streak.react&(!prev_gcd.1.pyroblast|action.pyroblast.in_flight)
@@ -363,7 +387,7 @@ local function APL()
       if HR.Cast(S.RuneofPower, Settings.Fire.GCDasOffGCD.RuneofPower) then return ""; end
     end
     -- call_action_list,name=combustion_phase,if=cooldown.combustion.remains<=action.rune_of_power.cast_time+(!talent.kindling.enabled*gcd)&(!talent.firestarter.enabled|!firestarter.active|active_enemies>=4|active_enemies>=2&talent.flame_patch.enabled)|buff.combustion.up
-    if HR.CDsON() and (S.Combustion:CooldownRemainsP() <= S.RuneofPower:CastTime() + (num(not S.Kindling:IsAvailable()) * Player:GCD()) and (not S.Firestarter:IsAvailable() or not bool(S.Firestarter:ActiveStatus()) or Cache.EnemiesCount[40] >= 4 or Cache.EnemiesCount[40] >= 2 and S.FlamePatch:IsAvailable()) or Player:BuffP(S.CombustionBuff)) then
+    if HR.CDsON() and (S.Combustion:CooldownRemainsP() <= S.RuneofPower:CastTime() + (num(not S.Kindling:IsAvailable()) * Player:GCD()) and (not S.Firestarter:IsAvailable() or not bool(S.Firestarter:ActiveStatus()) or EnemiesCount >= 4 or EnemiesCount >= 2 and S.FlamePatch:IsAvailable()) or Player:BuffP(S.CombustionBuff)) then
       local ShouldReturn = CombustionPhase(); if ShouldReturn then return ShouldReturn; end
     end
     -- call_action_list,name=rop_phase,if=buff.rune_of_power.up&buff.combustion.down

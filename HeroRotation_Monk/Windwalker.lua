@@ -102,8 +102,6 @@ Item.Monk.Windwalker = {
   KatsuosEclipse                   = Item(137029, {8}),
 };
 local I = Item.Monk.Windwalker;
--- Rotation Var
-
 
 local BaseCost = {
   [S.BlackoutKick] = (Player:Level() < 12 and 3 or (Player:Level() < 22 and 2 or 1)),
@@ -154,15 +152,26 @@ function Spell:Ready(Index)
   return self:IsReadyP();
 end
 
+local EnemyRanges = {8, 5}
+local function UpdateRanges()
+  for _, i in ipairs(EnemyRanges) do
+    HL.GetEnemies(i);
+  end
+end
+
+HL.RegisterNucleusAbility(113656, 8, 6)               -- Fists of Fury
+HL.RegisterNucleusAbility(101546, 8, 6)               -- Spinning Crane Kick
+HL.RegisterNucleusAbility(261715, 8, 6)               -- Rushing Jade Wind
+HL.RegisterNucleusAbility(152175, 8, 6)               -- Whirling Dragon Punch
+
 -- Action Lists --
 --- ======= MAIN =======
 -- APL Main
 local function APL ()
   local Precombat, Cooldowns, SingleTarget, Serenity, Aoe
   -- Unit Update
-  HL.GetEnemies(5);
-  HL.GetEnemies(8);
-  Everyone.AoEToggleEnemiesUpdate();
+  UpdateRanges()
+  Everyone.AoEToggleEnemiesUpdate()
 
   -- Pre Combat --
   Precombat = function()

@@ -84,7 +84,6 @@ local function UpdateRanges()
   end
 end
 
-
 local function num(val)
   if val then return 1 else return 0 end
 end
@@ -99,6 +98,10 @@ S.ExecuteMassacre   = Spell(280735)
 local function UpdateExecuteID()
     S.Execute = S.Massacre:IsAvailable() and S.ExecuteMassacre or S.ExecuteDefault
 end
+
+HL.RegisterNucleusAbility(46924, 8, 6)               -- Bladestorm
+HL.RegisterNucleusAbility(118000, 12, 6)             -- Dragon Roar
+HL.RegisterNucleusAbility(190411, 8, 6)              -- Whirlwind
 
 --- ======= ACTION LISTS =======
 local function APL()

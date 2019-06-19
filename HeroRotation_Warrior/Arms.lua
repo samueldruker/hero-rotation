@@ -95,7 +95,6 @@ local function UpdateRanges()
   end
 end
 
-
 local function num(val)
   if val then return 1 else return 0 end
 end
@@ -110,6 +109,11 @@ S.ExecuteMassacre   = Spell(281000)
 local function UpdateExecuteID()
     S.Execute = S.Massacre:IsAvailable() and S.ExecuteMassacre or S.ExecuteDefault
 end
+
+HL.RegisterNucleusAbility(152277, 8, 6)               -- Ravager
+HL.RegisterNucleusAbility(227847, 8, 6)               -- Bladestorm
+HL.RegisterNucleusAbility(845, 8, 6)                  -- Cleave
+HL.RegisterNucleusAbility(1680, 8, 6)                 -- Whirlwind
 
 --- ======= ACTION LISTS =======
 local function APL()
@@ -279,7 +283,7 @@ local function APL()
       if HR.Cast(S.MortalStrike) then return "mortal_strike 232"; end
     end
     -- whirlwind,if=raid_event.adds.up
-    if S.Whirlwind:IsReadyP() and ((Cache.EnemiesCount[8] > 1)) then
+    if S.Whirlwind:IsReadyP() and (Cache.EnemiesCount[8] > 1) then
       if HR.Cast(S.Whirlwind) then return "whirlwind 240"; end
     end
     -- overpower
@@ -406,7 +410,7 @@ local function APL()
       if HR.Cast(S.SweepingStrikes) then return "sweeping_strikes 390"; end
     end
     -- run_action_list,name=hac,if=raid_event.adds.exists
-    if ((Cache.EnemiesCount[8] > 1)) then
+    if (Cache.EnemiesCount[8] > 1) then
       return Hac();
     end
     -- run_action_list,name=five_target,if=spell_targets.whirlwind>4

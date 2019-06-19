@@ -13,7 +13,6 @@ local Spell  = HL.Spell
 local Item   = HL.Item
 -- HeroRotation
 local HR     = HeroRotation
-local Hunter = HR.Commons.Hunter
 
 --- ============================ CONTENT ===========================
 --- ======= APL LOCALS =======
@@ -89,12 +88,12 @@ local function UpdateRanges()
   end
 end
 
-local function GetEnemiesCount()
+local function GetEnemiesCount(range)
   -- Unit Update - Update differently depending on if splash data is being used
   if HR.AoEON() then
     if Settings.BeastMastery.UseSplashData then
-      HL.GetEnemies(10, nil, true, Target)
-      return Cache.EnemiesCount[10]
+      HL.GetEnemies(range, nil, true, Target)
+      return Cache.EnemiesCount[range]
     else
       UpdateRanges()
       Everyone.AoEToggleEnemiesUpdate()
@@ -114,12 +113,12 @@ local function bool(val)
 end
 
 -- Register Splash Data Nucleus Abilities
-HL.RegisterNucleusAbility(2643, 8, 4)               -- Multi-Shot
-HL.RegisterNucleusAbility(194392, 8, 4)             -- Volley
-HL.RegisterNucleusAbility({171454, 171457}, 8, 4)   -- Chimaera Shot
-HL.RegisterNucleusAbility(118459, 10, 4)            -- Beast Cleave
-HL.RegisterNucleusAbility(201754, 10, 4)            -- Stomp
-HL.RegisterNucleusAbility(271686, 3, 4)             -- Head My Call
+HL.RegisterNucleusAbility(2643, 8, 6)               -- Multi-Shot
+HL.RegisterNucleusAbility(194392, 8, 6)             -- Volley
+HL.RegisterNucleusAbility({171454, 171457}, 8, 6)   -- Chimaera Shot
+HL.RegisterNucleusAbility(118459, 10, 6)            -- Beast Cleave
+HL.RegisterNucleusAbility(201754, 10, 6)            -- Stomp
+HL.RegisterNucleusAbility(271686, 3, 6)             -- Head My Call
 
 --- ======= ACTION LISTS =======
 local function APL()
@@ -128,7 +127,7 @@ local function APL()
   -- GCD Max + Latency Grace Period
   -- BM APL uses a lot of gcd.max specific timing that is slightly tight for real-world suggestions
   GCDMax = Player:GCD() + 0.150
-  EnemiesCount = GetEnemiesCount()
+  EnemiesCount = GetEnemiesCount(8)
 
   Precombat = function()
     -- flask

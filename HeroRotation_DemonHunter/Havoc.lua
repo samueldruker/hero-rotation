@@ -100,7 +100,7 @@ HL:RegisterForEvent(function()
   VarWaitingForDarkSlash = 0
 end, "PLAYER_REGEN_ENABLED")
 
-local EnemyRanges = {40, 30, 20, 8}
+local EnemyRanges = {40, 20, 8}
 local function UpdateRanges()
   for _, i in ipairs(EnemyRanges) do
     HL.GetEnemies(i);
@@ -141,6 +141,14 @@ end
 local function ConserveFelRush()
   return not Settings.Havoc.ConserveFelRush or S.FelRush:Charges() == 2
 end
+
+-- Register Splash Data Nucleus Abilities
+HL.RegisterNucleusAbility(191427, 8, 6)               -- Metamorphosis
+HL.RegisterNucleusAbility(198013, 20, 6)              -- Eye Beam
+HL.RegisterNucleusAbility(188499, 8, 6)               -- Blade Dance
+HL.RegisterNucleusAbility(210152, 8, 6)               -- Death Sweep
+HL.RegisterNucleusAbility(258920, 8, 6)               -- Immolation Aura
+HL.RegisterNucleusAbility(179057, 8, 6)               -- Chaos Nova
 
 --- ======= ACTION LISTS =======
 local function APL()

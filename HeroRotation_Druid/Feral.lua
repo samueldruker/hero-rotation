@@ -102,7 +102,6 @@ local function UpdateRanges()
   end
 end
 
-
 local function num(val)
   if val then return 1 else return 0 end
 end
@@ -155,6 +154,12 @@ end
 local function EvaluateCycleFerociousBite418(TargetUnit)
   return TargetUnit:DebuffP(S.RipDebuff) and TargetUnit:DebuffRemainsP(S.RipDebuff) < 3 and TargetUnit:TimeToDie() > 10 and (S.Sabertooth:IsAvailable())
 end
+
+HL.RegisterNucleusAbility(285381, 8, 6)               -- Primal Wrath
+HL.RegisterNucleusAbility(202028, 8, 6)               -- Brutal Slash
+HL.RegisterNucleusAbility(106830, 8, 6)               -- Thrash (Cat)
+HL.RegisterNucleusAbility(106785, 8, 6)               -- Swipe (Cat)
+
 --- ======= ACTION LISTS =======
 local function APL()
   local Precombat, Cooldowns, Finishers, Generators, Opener
@@ -384,7 +389,7 @@ local function APL()
     end
     -- rip,if=!ticking
     -- Manual addition: Use Primal Wrath if >= 2 targets or Rip if only 1 target
-    if S.PrimalWrath:IsCastableP() and (S.PrimalWrath:IsAvailable() and not Target:DebuffP(S.RipDebuff) and Cache.EnemiesCount[5] >= 2) then
+    if S.PrimalWrath:IsCastableP() and (S.PrimalWrath:IsAvailable() and not Target:DebuffP(S.RipDebuff) and Cache.EnemiesCount[8] >= 2) then
       if HR.Cast(S.PrimalWrath) then return "primal_wrath opener"; end
     end
     if S.Rip:IsCastableP() and (not Target:DebuffP(S.RipDebuff)) then
