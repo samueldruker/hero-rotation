@@ -60,6 +60,34 @@ Spell.Rogue.Assassination = {
   DoubleDose            = Spell(273007),
   EchoingBlades         = Spell(287649),
   ShroudedSuffocation   = Spell(278666),
+  -- Essences
+  BloodOfTheEnemy       = Spell(297108),
+  BloodOfTheEnemy2      = Spell(298273),
+  BloodOfTheEnemy3      = Spell(298277),
+  ConcentratedFlame     = Spell(295373),
+  ConcentratedFlame2    = Spell(299349),
+  ConcentratedFlame3    = Spell(299353),
+  GuardianOfAzeroth     = Spell(295840),
+  GuardianOfAzeroth2    = Spell(299355),
+  GuardianOfAzeroth3    = Spell(299358),
+  FocusedAzeriteBeam    = Spell(295258),
+  FocusedAzeriteBeam2   = Spell(299336),
+  FocusedAzeriteBeam3   = Spell(299338),
+  PurifyingBlast        = Spell(295337),
+  PurifyingBlast2       = Spell(299345),
+  PurifyingBlast3       = Spell(299347),
+  TheUnboundForce       = Spell(298452),
+  TheUnboundForce2      = Spell(299376),
+  TheUnboundForce3      = Spell(299378),
+  RippleInSpace         = Spell(302731),
+  RippleInSpace2        = Spell(302982),
+  RippleInSpace3        = Spell(302983),
+  WorldveinResonance    = Spell(295186),
+  WorldveinResonance2   = Spell(298628),
+  WorldveinResonance3   = Spell(299334),
+  MemoryOfLucidDreams   = Spell(298357),
+  MemoryOfLucidDreams2  = Spell(299372),
+  MemoryOfLucidDreams3  = Spell(299374),
   -- Defensive
   CrimsonVial           = Spell(185311),
   Feint                 = Spell(1966),
@@ -271,6 +299,27 @@ local function SSBuffedTargetsAbovePandemic()
   return count;
 end
 
+local function DetermineEssenceRanks()
+  S.BloodOfTheEnemy = S.BloodOfTheEnemy2:IsAvailable() and S.BloodOfTheEnemy2 or S.BloodOfTheEnemy;
+  S.BloodOfTheEnemy = S.BloodOfTheEnemy3:IsAvailable() and S.BloodOfTheEnemy3 or S.BloodOfTheEnemy;
+  S.MemoryOfLucidDreams = S.MemoryOfLucidDreams2:IsAvailable() and S.MemoryOfLucidDreams2 or S.MemoryOfLucidDreams;
+  S.MemoryOfLucidDreams = S.MemoryOfLucidDreams3:IsAvailable() and S.MemoryOfLucidDreams3 or S.MemoryOfLucidDreams;
+  S.PurifyingBlast = S.PurifyingBlast2:IsAvailable() and S.PurifyingBlast2 or S.PurifyingBlast;
+  S.PurifyingBlast = S.PurifyingBlast3:IsAvailable() and S.PurifyingBlast3 or S.PurifyingBlast;
+  S.RippleInSpace = S.RippleInSpace2:IsAvailable() and S.RippleInSpace2 or S.RippleInSpace;
+  S.RippleInSpace = S.RippleInSpace3:IsAvailable() and S.RippleInSpace3 or S.RippleInSpace;
+  S.ConcentratedFlame = S.ConcentratedFlame2:IsAvailable() and S.ConcentratedFlame2 or S.ConcentratedFlame;
+  S.ConcentratedFlame = S.ConcentratedFlame3:IsAvailable() and S.ConcentratedFlame3 or S.ConcentratedFlame;
+  S.TheUnboundForce = S.TheUnboundForce2:IsAvailable() and S.TheUnboundForce2 or S.TheUnboundForce;
+  S.TheUnboundForce = S.TheUnboundForce3:IsAvailable() and S.TheUnboundForce3 or S.TheUnboundForce;
+  S.WorldveinResonance = S.WorldveinResonance2:IsAvailable() and S.WorldveinResonance2 or S.WorldveinResonance;
+  S.WorldveinResonance = S.WorldveinResonance3:IsAvailable() and S.WorldveinResonance3 or S.WorldveinResonance;
+  S.FocusedAzeriteBeam = S.FocusedAzeriteBeam2:IsAvailable() and S.FocusedAzeriteBeam2 or S.FocusedAzeriteBeam;
+  S.FocusedAzeriteBeam = S.FocusedAzeriteBeam3:IsAvailable() and S.FocusedAzeriteBeam3 or S.FocusedAzeriteBeam;
+  S.GuardianOfAzeroth = S.GuardianOfAzeroth2:IsAvailable() and S.GuardianOfAzeroth2 or S.GuardianOfAzeroth;
+  S.GuardianOfAzeroth = S.GuardianOfAzeroth3:IsAvailable() and S.GuardianOfAzeroth3 or S.GuardianOfAzeroth;
+end
+
 local MythicDungeon;
 do
   local SappedSoulSpells = {
@@ -308,6 +357,46 @@ local Interrupts = {
 }
 
 -- APL Action Lists (and Variables)
+-- # Essences
+local function Essences ()
+  -- blood_of_the_enemy
+  if S.BloodOfTheEnemy:IsCastableP() then
+    if HR.Cast(S.BloodOfTheEnemy) then return "Cast Blood Of The Enemy"; end
+  end
+  -- concentrated_flame
+  if S.ConcentratedFlame:IsCastableP() then
+    if HR.Cast(S.BloodOfTheEnemy) then return "Cast Concentrated Flame"; end
+  end
+  -- guardian_of_azeroth
+  if S.GuardianOfAzeroth:IsCastableP() then
+    if HR.Cast(S.GuardianOfAzeroth) then return "Cast Guardian Of Azeroth"; end
+  end
+  -- focused_azerite_beam
+  if S.FocusedAzeriteBeam:IsCastableP() then
+    if HR.Cast(S.FocusedAzeriteBeam) then return "Cast Focused Azerite Beam"; end
+  end
+  -- purifying_blast
+  if S.PurifyingBlast:IsCastableP() then
+    if HR.Cast(S.PurifyingBlast) then return "Cast Purifying Blast"; end
+  end
+  -- the_unbound_force
+  if S.TheUnboundForce:IsCastableP() then
+    if HR.Cast(S.TheUnboundForce) then return "Cast The Unbound Force"; end
+  end
+  -- ripple_in_space
+  if S.RippleInSpace:IsCastableP() then
+    if HR.Cast(S.RippleInSpace) then return "Cast Ripple In Space"; end
+  end
+  -- worldvein_resonance
+  if S.WorldveinResonance:IsCastableP() then
+    if HR.Cast(S.WorldveinResonance) then return "Cast Worldvein Resonance"; end
+  end
+  -- memory_of_lucid_dreams,if=energy<50
+  if S.MemoryOfLucidDreams:IsCastableP() and Player:EnergyPredicted() < 50 then
+    if HR.Cast(S.MemoryOfLucidDreams) then return "Cast Memory Of Lucid Dreams"; end
+  end
+  return false;
+end
 -- # Cooldowns
 local function CDs ()
   if Target:IsInRange("Melee") then
@@ -340,6 +429,12 @@ local function CDs ()
       end
     end
 
+    -- actions.cds+=/call_action_list,name=essences,if=dot.rupture.ticking
+    if HR.CDsON() and Target:DebuffP(S.Rupture) then
+      ShouldReturn = Essences();
+      if ShouldReturn then return ShouldReturn; end
+    end
+
     -- actions.cds+=/marked_for_death,target_if=min:target.time_to_die,if=target.time_to_die<combo_points.deficit*1.5|(raid_event.adds.in>40&combo_points.deficit>=cp_max_spend)
     if S.MarkedforDeath:IsCastable() then
       if Target:FilteredTimeToDie("<", Player:ComboPointsDeficit() * 1.5) then
@@ -350,8 +445,8 @@ local function CDs ()
       end
     end
     if HR.CDsON() then
-      -- actions.cds+=/vendetta,if=!stealthed.rogue&dot.rupture.ticking&(!talent.subterfuge.enabled|!azerite.shrouded_suffocation.enabled|dot.garrote.pmultiplier>1&(spell_targets.fan_of_knives<6|!cooldown.vanish.up))&(!talent.nightstalker.enabled|!talent.exsanguinate.enabled|cooldown.exsanguinate.remains<5-2*talent.deeper_stratagem.enabled)
-      if S.Vendetta:IsCastable() and not Player:IsStealthedP(true, false) and Target:DebuffP(S.Rupture)
+      -- actions.cds+=/vendetta,if=!stealthed.rogue&dot.rupture.ticking&!debuff.vendetta.up&(!talent.subterfuge.enabled|!azerite.shrouded_suffocation.enabled|dot.garrote.pmultiplier>1&(spell_targets.fan_of_knives<6|!cooldown.vanish.up))&(!talent.nightstalker.enabled|!talent.exsanguinate.enabled|cooldown.exsanguinate.remains<5-2*talent.deeper_stratagem.enabled)
+      if S.Vendetta:IsCastable() and not Player:IsStealthedP(true, false) and Target:DebuffP(S.Rupture) and not Target:DebuffP(S.Vendetta)
         and (not S.Subterfuge:IsAvailable() or not S.ShroudedSuffocation:AzeriteEnabled() or Target:PMultiplier(S.Garrote) > 1 and (Cache.EnemiesCount[10] < 6 or not S.Vanish:CooldownUp()))
         and (not S.Nightstalker:IsAvailable() or not S.Exsanguinate:IsAvailable() or S.Exsanguinate:CooldownRemainsP() < 5 - 2 * num(S.DeeperStratagem:IsAvailable())) then
         if HR.Cast(S.Vendetta, Settings.Assassination.GCDasOffGCD.Vendetta) then return "Cast Vendetta"; end
@@ -605,6 +700,7 @@ local function APL ()
   CrimsonTempestThreshold = (2 + ComboPoints * 2) * 0.3;
   RuptureDMGThreshold = S.Envenom:Damage()*Settings.Assassination.EnvenomDMGOffset; -- Used to check if Rupture is worth to be casted since it's a finisher.
   GarroteDMGThreshold = S.Mutilate:Damage()*Settings.Assassination.MutilateDMGOffset; -- Used as TTD Not Valid fallback since it's a generator.
+  DetermineEssenceRanks();
 
   -- Defensives
   -- Crimson Vial
@@ -709,7 +805,7 @@ end
 
 HR.SetAPL(259, APL);
 
--- Last Update: 2019-03-17
+-- Last Update: 2019-06-26
 
 -- # Executed before combat begins. Accepts non-harmful actions only.
 -- actions.precombat=flask
@@ -759,6 +855,8 @@ HR.SetAPL(259, APL);
 -- actions.cds+=/blood_fury,if=debuff.vendetta.up
 -- actions.cds+=/berserking,if=debuff.vendetta.up
 --
+-- actions.cds+=/call_action_list,name=essences,if=dot.rupture.ticking
+--
 -- # Cooldowns
 -- # If adds are up, snipe the one with lowest TTD. Use when dying faster than CP deficit or without any CP.
 -- actions.cds+=/marked_for_death,target_if=min:target.time_to_die,if=raid_event.adds.up&(target.time_to_die<combo_points.deficit*1.5|combo_points.deficit>=cp_max_spend)
@@ -767,7 +865,7 @@ HR.SetAPL(259, APL);
 -- # Vendetta outside stealth with Rupture up.
 -- # - With Subterfuge talent and Shrouded Suffocation power, always use with buffed Garrote. After first vanish against 6+ targets.
 -- # - With Nightstalker and Exsanguinate, use up to 5s (3s with DS) before Vanish combo.
--- actions.cds+=/vendetta,if=!stealthed.rogue&dot.rupture.ticking&(!talent.subterfuge.enabled|!azerite.shrouded_suffocation.enabled|dot.garrote.pmultiplier>1&(spell_targets.fan_of_knives<6|!cooldown.vanish.up))&(!talent.nightstalker.enabled|!talent.exsanguinate.enabled|cooldown.exsanguinate.remains<5-2*talent.deeper_stratagem.enabled)
+-- actions.cds+=/vendetta,if=!stealthed.rogue&dot.rupture.ticking&!debuff.vendetta.up&(!talent.subterfuge.enabled|!azerite.shrouded_suffocation.enabled|dot.garrote.pmultiplier>1&(spell_targets.fan_of_knives<6|!cooldown.vanish.up))&(!talent.nightstalker.enabled|!talent.exsanguinate.enabled|cooldown.exsanguinate.remains<5-2*talent.deeper_stratagem.enabled)
 --
 -- # Vanish with Exsg + (Nightstalker, or Subterfuge only on 1T): Maximum CP and Exsg ready for next GCD
 -- actions.cds+=/vanish,if=talent.exsanguinate.enabled&(talent.nightstalker.enabled|talent.subterfuge.enabled&variable.single_target)&combo_points>=cp_max_spend&cooldown.exsanguinate.remains<1&(!talent.subterfuge.enabled|!azerite.shrouded_suffocation.enabled|dot.garrote.pmultiplier<=1)
@@ -792,6 +890,17 @@ HR.SetAPL(259, APL);
 -- # Exsanguinate when both Rupture and Garrote are up for long enough
 -- actions.cds+=/exsanguinate,if=dot.rupture.remains>4+4*cp_max_spend&!dot.garrote.refreshable
 -- actions.cds+=/toxic_blade,if=dot.rupture.ticking
+--
+-- # Essences
+-- actions.essences=concentrated_flame
+-- actions.essences+=/blood_of_the_enemy
+-- actions.essences+=/guardian_of_azeroth
+-- actions.essences+=/focused_azerite_beam
+-- actions.essences+=/purifying_blast
+-- actions.essences+=/the_unbound_force
+-- actions.essences+=/ripple_in_space
+-- actions.essences+=/worldvein_resonance
+-- actions.essences+=/memory_of_lucid_dreams,if=energy<50
 --
 -- # Damage over time abilities
 -- # Special Rupture setup for Exsg
