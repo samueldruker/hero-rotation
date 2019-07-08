@@ -34,7 +34,7 @@
     },
     Destruction = {
       UnendingResolveHP = 20,
-      ShowPoPP = false,
+      UseSplashData = true,
       SpellType="Auto",--Green fire override {"Auto","Orange","Green"}
       Sephuz = {
         ShadowFury = false,
@@ -51,6 +51,7 @@
         DimensionalRift = true,
         SummonImp = true,
         GrimoireImp = true,
+        Essences = true,
       },
       -- {Display OffGCD as OffGCD, ForceReturn}
       OffGCDasOffGCD = {
@@ -61,6 +62,7 @@
     },
     Demonology = {
       UnendingResolveHP = 20,
+      UseSplashData = true,
       -- {Display GCD as OffGCD, ForceReturn}
       GCDasOffGCD = {
         -- Abilities
@@ -69,6 +71,7 @@
         SummonDemonicTyrant = false,
         DemonicStrength = false,
         NetherPortal = true,
+        Essences = true,
       },
       -- {Display OffGCD as OffGCD, ForceReturn}
       OffGCDasOffGCD = {
@@ -78,7 +81,7 @@
     },
     Affliction = {
       -- UnendingResolveHP = 20,
-      ShowPoPP = false,
+      UseSplashData = true,
       -- Sephuz = {
       --   HowlOfTerror = false,
       --   MortalCoil = false,
@@ -94,6 +97,7 @@
         SummonPet = true,
         GrimoireOfSacrifice = true,
         PhantomSingularity = true,
+        Essences = true,
       },
       -- {Display OffGCD as OffGCD, ForceReturn}
       OffGCDasOffGCD = {
@@ -116,6 +120,7 @@
   -- CreatePanelOption("Dropdown", CP_Warlock, "APL.Warlock.Commons.ForcePet", {"No", "Infernal", "DoomGuard"}, "Force a specific pet", "Force the addon to show you a specific pet instead of the one the rotation propose.");
   CreatePanelOption("CheckButton", CP_Warlock, "APL.Warlock.Commons.UsePotions", "Show Potions", "Enable this if you want it to show you to use Potions.");
   -- Destruction
+  CreatePanelOption("CheckButton", CP_Destruction, "APL.Warlock.Destruction.UseSplashData", "Use Splash Data for AoE", "Only count AoE enemies that are already hit by AoE abilities.");
   CreatePanelOption("Slider", CP_Destruction, "APL.Warlock.Destruction.UnendingResolveHP", {0, 100, 1}, "Unending Resolve HP", "Set the Unending Resolve HP threshold.");
   CreatePanelOption("Dropdown", CP_Destruction, "APL.Warlock.Destruction.SpellType", {"Auto","Orange","Green"}, "Spell icons", "Define what icons you want to appear.");
   CreateARPanelOptions(CP_Destruction, "APL.Warlock.Destruction");
@@ -126,10 +131,12 @@
   CreatePanelOption("CheckButton", CP_Destruction, "APL.Warlock.Destruction.Sephuz.SingeMagic", "Sephuz: Show Singe Magic", "Enable this if you want it to show you when to use Singe Magic (Imp spell) to proc Sephuz's Secret (only when equipped).");
   CreatePanelOption("CheckButton", CP_Destruction, "APL.Warlock.Destruction.Sephuz.SpellLock", "Sephuz: Show Spell Lock", "Enable this if you want it to show you when to use Spell Lock (Felhunter spell) to proc Sephuz's Secret (only when equipped).");
   -- Demonology
+  CreatePanelOption("CheckButton", CP_Demonology, "APL.Warlock.Demonology.UseSplashData", "Use Splash Data for AoE", "Only count AoE enemies that are already hit by AoE abilities.");
   CreatePanelOption("Slider", CP_Demonology, "APL.Warlock.Demonology.UnendingResolveHP", {0, 100, 1}, "Unending Resolve HP", "Set the Unending Resolve HP threshold.");
   CreateARPanelOptions(CP_Demonology, "APL.Warlock.Demonology");
   CreatePanelOption("CheckButton", CP_Demonology, "APL.Warlock.Demonology.ShowBPoI", "Show Battle Potion of Intellect", "Enable this if you want it to show you when to use Battle Potion of Intellect.");
   -- Affliction
+  CreatePanelOption("CheckButton", CP_Affliction, "APL.Warlock.Affliction.UseSplashData", "Use Splash Data for AoE", "Only count AoE enemies that are already hit by AoE abilities.");
   CreateARPanelOptions(CP_Affliction, "APL.Warlock.Affliction");
   -- CreatePanelOption("CheckButton", CP_Affliction, "APL.Warlock.Affliction.Sephuz.HowlOfTerror", "Sephuz: Show Howl Of Terror", "Enable this if you want it to show you when to use Howl Of Terror to proc Sephuz's Secret (only when equipped).");
   -- CreatePanelOption("CheckButton", CP_Affliction, "APL.Warlock.Affliction.Sephuz.MortalCoil", "Sephuz: Show Mortal Coil", "Enable this if you want it to show you when to use Mortal Coil to proc Sephuz's Secret (only when equipped).");

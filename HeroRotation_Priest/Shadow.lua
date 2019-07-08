@@ -71,7 +71,8 @@ local S = Spell.Priest.Shadow;
 -- Items
 if not Item.Priest then Item.Priest = {} end
 Item.Priest.Shadow = {
-  BattlePotionofIntellect          = Item(163222)
+  BattlePotionofIntellect          = Item(163222),
+  PocketsizedComputationDevice     = Item(167555)
 };
 local I = Item.Priest.Shadow;
 
@@ -167,6 +168,10 @@ local function EvaluateCycleMindSear169(TargetUnit)
   return EnemiesCount > 1
 end
 
+local function InsanityDrain()
+  return (Player:BuffP(S.VoidformBuff)) and (math.ceil(5 + Player:BuffStackP(S.VoidformBuff) * 0.68)) or 0
+end
+
 HL.RegisterNucleusAbility(228260, 10, 6)               -- Void Eruption
 HL.RegisterNucleusAbility(48045, 10, 6)                -- Mind Sear
 HL.RegisterNucleusAbility(205385, 8, 6)                -- Shadow Crash
@@ -174,6 +179,7 @@ HL.RegisterNucleusAbility(205385, 8, 6)                -- Shadow Crash
 --- ======= ACTION LISTS =======
 local function APL()
   local Precombat, Cleave, Single
+  local InsanityDrain = InsanityDrain()
   EnemiesCount = GetEnemiesCount(8)
   HL.GetEnemies(40) -- For CastCycle calls
   Precombat = function()
@@ -247,8 +253,8 @@ local function APL()
     if S.VoidBolt:IsReadyP() or Player:IsCasting(S.VoidEruption) then
       if HR.Cast(S.VoidBolt) then return "void_bolt 78"; end
     end
-    -- memory_of_lucid_dreams,if=buff.voidform.stack>(20+5*buff.bloodlust.up)&insanity<=50
-    if S.MemoryOfLucidDreams:IsCastableP() and (Player:BuffStackP(S.VoidformBuff) > (20 + 5 * num(Player:HasHeroism())) and Player:Insanity() <= 50) then
+    -- memory_of_lucid_dreams,if=(buff.voidform.stack>20&insanity<=50)|buff.voidform.stack>(25+5*buff.bloodlust.up)|(current_insanity_drain*gcd.max*3)>insanity
+    if S.MemoryOfLucidDreams:IsCastableP() and ((Player:BuffStackP(S.VoidformBuff) > 20 and Player:Insanity() <= 50) or Player:BuffStackP(S.VoidformBuff) > (25 + 5 * num(Player:HasHeroism())) or (InsanityDrain * Player:GCD() * 3) > Player:Insanity()) then
       if HR.Cast(S.MemoryOfLucidDreams, Settings.Shadow.GCDasOffGCD.Essences) then return "memory_of_lucid_dreams"; end
     end
     -- blood_of_the_enemy
@@ -349,8 +355,8 @@ local function APL()
     if S.VoidBolt:IsReadyP() or Player:IsCasting(S.VoidEruption) then
       if HR.Cast(S.VoidBolt) then return "void_bolt 182"; end
     end
-    -- memory_of_lucid_dreams,if=buff.voidform.stack>(20+5*buff.bloodlust.up)&insanity<=50
-    if S.MemoryOfLucidDreams:IsCastableP() and (Player:BuffStackP(S.VoidformBuff) > (20 + 5 * num(Player:HasHeroism())) and Player:Insanity() <= 50) then
+    -- memory_of_lucid_dreams,if=(buff.voidform.stack>20&insanity<=50)|buff.voidform.stack>(25+5*buff.bloodlust.up)|(current_insanity_drain*gcd.max*3)>insanity
+    if S.MemoryOfLucidDreams:IsCastableP() and ((Player:BuffStackP(S.VoidformBuff) > 20 and Player:Insanity() <= 50) or Player:BuffStackP(S.VoidformBuff) > (25 + 5 * num(Player:HasHeroism())) or (InsanityDrain * Player:GCD() * 3) > Player:Insanity()) then
       if HR.Cast(S.MemoryOfLucidDreams, Settings.Shadow.GCDasOffGCD.Essences) then return "memory_of_lucid_dreams"; end
     end
     -- blood_of_the_enemy
@@ -449,6 +455,10 @@ local function APL()
   if Everyone.TargetIsValid() then
     -- Interrupts
     Everyone.Interrupt(30, S.Silence, Settings.Commons.OffGCDasOffGCD.Silence, false);
+    -- use_item,name=pocketsized_computation_device,if=equipped.167555
+    if I.PocketsizedComputationDevice:IsReady() then
+      if HR.CastSuggested(I.PocketsizedComputationDevice) then return "pocketsized_computation_device 282"; end
+    end
     -- potion,if=buff.bloodlust.react|target.time_to_die<=80|target.health.pct<35
     if I.BattlePotionofIntellect:IsReady() and Settings.Commons.UsePotions and (Player:HasHeroism() or Target:TimeToDie() <= 80 or Target:HealthPercentage() < 35) then
       if HR.CastSuggested(I.BattlePotionofIntellect) then return "battle_potion_of_intellect 283"; end
