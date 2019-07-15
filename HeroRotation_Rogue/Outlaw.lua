@@ -8,6 +8,7 @@ local Unit = HL.Unit;
 local Player = Unit.Player;
 local Target = Unit.Target;
 local Spell = HL.Spell;
+local MultiSpell = HL.MultiSpell
 local Item = HL.Item;
 -- HeroRotation
 local HR = HeroRotation;
@@ -65,33 +66,35 @@ Spell.Rogue.Outlaw = {
   SnakeEyesBuff                   = Spell(275863),
   KeepYourWitsBuff                = Spell(288988),
   -- Essences
-  BloodOfTheEnemy       = Spell(297108),
-  BloodOfTheEnemy2      = Spell(298273),
-  BloodOfTheEnemy3      = Spell(298277),
-  ConcentratedFlame     = Spell(295373),
-  ConcentratedFlame2    = Spell(299349),
-  ConcentratedFlame3    = Spell(299353),
-  GuardianOfAzeroth     = Spell(295840),
-  GuardianOfAzeroth2    = Spell(299355),
-  GuardianOfAzeroth3    = Spell(299358),
-  FocusedAzeriteBeam    = Spell(295258),
-  FocusedAzeriteBeam2   = Spell(299336),
-  FocusedAzeriteBeam3   = Spell(299338),
-  PurifyingBlast        = Spell(295337),
-  PurifyingBlast2       = Spell(299345),
-  PurifyingBlast3       = Spell(299347),
-  TheUnboundForce       = Spell(298452),
-  TheUnboundForce2      = Spell(299376),
-  TheUnboundForce3      = Spell(299378),
-  RippleInSpace         = Spell(302731),
-  RippleInSpace2        = Spell(302982),
-  RippleInSpace3        = Spell(302983),
-  WorldveinResonance    = Spell(295186),
-  WorldveinResonance2   = Spell(298628),
-  WorldveinResonance3   = Spell(299334),
-  MemoryOfLucidDreams   = Spell(298357),
-  MemoryOfLucidDreams2  = Spell(299372),
-  MemoryOfLucidDreams3  = Spell(299374),
+  BloodOfTheEnemy                 = Spell(297108),
+  BloodOfTheEnemy2                = Spell(298273),
+  BloodOfTheEnemy3                = Spell(298277),
+  ConcentratedFlame               = Spell(295373),
+  ConcentratedFlame2              = Spell(299349),
+  ConcentratedFlame3              = Spell(299353),
+  GuardianOfAzeroth               = Spell(295840),
+  GuardianOfAzeroth2              = Spell(299355),
+  GuardianOfAzeroth3              = Spell(299358),
+  FocusedAzeriteBeam              = Spell(295258),
+  FocusedAzeriteBeam2             = Spell(299336),
+  FocusedAzeriteBeam3             = Spell(299338),
+  PurifyingBlast                  = Spell(295337),
+  PurifyingBlast2                 = Spell(299345),
+  PurifyingBlast3                 = Spell(299347),
+  TheUnboundForce                 = Spell(298452),
+  TheUnboundForce2                = Spell(299376),
+  TheUnboundForce3                = Spell(299378),
+  RippleInSpace                   = Spell(302731),
+  RippleInSpace2                  = Spell(302982),
+  RippleInSpace3                  = Spell(302983),
+  WorldveinResonance              = Spell(295186),
+  WorldveinResonance2             = Spell(298628),
+  WorldveinResonance3             = Spell(299334),
+  LifebloodBuff                   = Spell(295137),
+  MemoryOfLucidDreams             = Spell(298357),
+  MemoryOfLucidDreams2            = Spell(299372),
+  MemoryOfLucidDreams3            = Spell(299374),
+  LucidDreamsBuff                 = MultiSpell(298357, 299372, 299374),
   -- Defensive
   CrimsonVial                     = Spell(185311),
   Feint                           = Spell(1966),
@@ -104,7 +107,10 @@ Spell.Rogue.Outlaw = {
   GrandMelee                      = Spell(193358),
   RuthlessPrecision               = Spell(193357),
   SkullandCrossbones              = Spell(199603),
-  TrueBearing                     = Spell(193359)
+  TrueBearing                     = Spell(193359),
+  -- Misc
+  VigorTrinketBuff                = Spell(287916),
+  RazorCoralDebuff                = Spell(303568),
 };
 local S = Spell.Rogue.Outlaw;
 
@@ -115,6 +121,10 @@ Item.Rogue.Outlaw = {
   GalecallersBoon       = Item(159614, {13, 14}),
   InvocationOfYulon     = Item(165568, {13, 14}),
   LustrousGoldenPlumage = Item(159617, {13, 14}),
+  ComputationDevice     = Item(167555, {13, 14}),
+  VigorTrinket          = Item(165572, {13, 14}),
+  FontOfPower           = Item(169314, {13, 14}),
+  RazorCoral            = Item(169311, {13, 14}),
 };
 local I = Item.Rogue.Outlaw;
 
@@ -317,122 +327,45 @@ end
 local function Essences ()
   -- blood_of_the_enemy,if=variable.blade_flurry_sync
   if S.BloodOfTheEnemy:IsCastableP() and Blade_Flurry_Sync() then
-    if Settings.Commons.EssenceDisplayStyle == "Suggested" then
-      HR.CastSuggested(S.BloodOfTheEnemy);
-    else
-      if HR.Cast(S.BloodOfTheEnemy, (Settings.Commons.EssenceDisplayStyle == "Cooldown")) then return "Cast BloodOfTheEnemy"; end
-    end
+    if HR.Cast(S.BloodOfTheEnemy, nil, Settings.Commons.EssenceDisplayStyle) then return "Cast BloodOfTheEnemy"; end
   end
   -- concentrated_flame
   if S.ConcentratedFlame:IsCastableP() then
-    if Settings.Commons.EssenceDisplayStyle == "Suggested" then
-      HR.CastSuggested(S.ConcentratedFlame);
-    else
-      if HR.Cast(S.ConcentratedFlame, (Settings.Commons.EssenceDisplayStyle == "Cooldown")) then return "Cast ConcentratedFlame"; end
-    end
+    if HR.Cast(S.ConcentratedFlame, nil, Settings.Commons.EssenceDisplayStyle) then return "Cast ConcentratedFlame"; end
   end
   -- guardian_of_azeroth
   if S.GuardianOfAzeroth:IsCastableP() then
-    if Settings.Commons.EssenceDisplayStyle == "Suggested" then
-      HR.CastSuggested(S.GuardianOfAzeroth);
-    else
-      if HR.Cast(S.GuardianOfAzeroth, (Settings.Commons.EssenceDisplayStyle == "Cooldown")) then return "Cast GuardianOfAzeroth"; end
-    end
+    if HR.Cast(S.GuardianOfAzeroth, nil, Settings.Commons.EssenceDisplayStyle) then return "Cast GuardianOfAzeroth"; end
   end
   -- focused_azerite_beam
   if S.FocusedAzeriteBeam:IsCastableP() then
-    if Settings.Commons.EssenceDisplayStyle == "Suggested" then
-      HR.CastSuggested(S.FocusedAzeriteBeam);
-    else
-      if HR.Cast(S.FocusedAzeriteBeam, (Settings.Commons.EssenceDisplayStyle == "Cooldown")) then return "Cast FocusedAzeriteBeam"; end
-    end
+    if HR.Cast(S.FocusedAzeriteBeam, nil, Settings.Commons.EssenceDisplayStyle) then return "Cast FocusedAzeriteBeam"; end
   end
   -- purifying_blast
   if S.PurifyingBlast:IsCastableP() then
-    if Settings.Commons.EssenceDisplayStyle == "Suggested" then
-      HR.CastSuggested(S.PurifyingBlast);
-    else
-      if HR.Cast(S.PurifyingBlast, (Settings.Commons.EssenceDisplayStyle == "Cooldown")) then return "Cast PurifyingBlast"; end
-    end
+    if HR.Cast(S.PurifyingBlast, nil, Settings.Commons.EssenceDisplayStyle) then return "Cast PurifyingBlast"; end
   end
   -- the_unbound_force
   if S.TheUnboundForce:IsCastableP() then
-    if Settings.Commons.EssenceDisplayStyle == "Suggested" then
-      HR.CastSuggested(S.TheUnboundForce);
-    else
-      if HR.Cast(S.TheUnboundForce, (Settings.Commons.EssenceDisplayStyle == "Cooldown")) then return "Cast TheUnboundForce"; end
-    end
+    if HR.Cast(S.TheUnboundForce, nil, Settings.Commons.EssenceDisplayStyle) then return "Cast TheUnboundForce"; end
   end
   -- ripple_in_space
   if S.RippleInSpace:IsCastableP() then
-    if Settings.Commons.EssenceDisplayStyle == "Suggested" then
-      HR.CastSuggested(S.RippleInSpace);
-    else
-      if HR.Cast(S.RippleInSpace, (Settings.Commons.EssenceDisplayStyle == "Cooldown")) then return "Cast RippleInSpace"; end
-    end
+    if HR.Cast(S.RippleInSpace, nil, Settings.Commons.EssenceDisplayStyle) then return "Cast RippleInSpace"; end
   end
-  -- worldvein_resonance
-  if S.WorldveinResonance:IsCastableP() then
-    if Settings.Commons.EssenceDisplayStyle == "Suggested" then
-      HR.CastSuggested(S.WorldveinResonance);
-    else
-      if HR.Cast(S.WorldveinResonance, (Settings.Commons.EssenceDisplayStyle == "Cooldown")) then return "Cast WorldveinResonance"; end
-    end
+  -- worldvein_resonance,if=buff.lifeblood.stack<3
+  if S.WorldveinResonance:IsCastableP() and Player:BuffStackP(S.LifebloodBuff) < 3 then
+    if HR.Cast(S.WorldveinResonance, nil, Settings.Commons.EssenceDisplayStyle) then return "Cast WorldveinResonance"; end
   end
   -- memory_of_lucid_dreams,if=energy<45
   if S.MemoryOfLucidDreams:IsCastableP() and Player:EnergyPredicted() < 45 then
-    if Settings.Commons.EssenceDisplayStyle == "Suggested" then
-      HR.CastSuggested(S.MemoryOfLucidDreams);
-    else
-      if HR.Cast(S.MemoryOfLucidDreams, (Settings.Commons.EssenceDisplayStyle == "Cooldown")) then return "Cast MemoryOfLucidDreams"; end
-    end
+    if HR.Cast(S.MemoryOfLucidDreams, nil, Settings.Commons.EssenceDisplayStyle) then return "Cast MemoryOfLucidDreams"; end
   end
   return false;
 end
 
 local function CDs ()
-  -- actions.cds=potion,if=buff.bloodlust.react|target.time_to_die<=60|buff.adrenaline_rush.up
-  -- TODO: Add Potion
-
   if Target:IsInRange(S.SinisterStrike) then
-    -- Racials
-    if HR.CDsON() then
-      -- actions.cds+=/blood_fury
-      if S.BloodFury:IsCastable() then
-        if HR.Cast(S.BloodFury, Settings.Commons.OffGCDasOffGCD.Racials) then return "Cast Blood Fury"; end
-      end
-      -- actions.cds+=/berserking
-      if S.Berserking:IsCastable() then
-        if HR.Cast(S.Berserking, Settings.Commons.OffGCDasOffGCD.Racials) then return "Cast Berserking"; end
-      end
-      -- actions.cds+=/fireblood
-      if S.Fireblood:IsCastable() then
-        if HR.Cast(S.Fireblood, Settings.Commons.OffGCDasOffGCD.Racials) then return "Cast Fireblood"; end
-      end
-      -- actions.cds+=/ancestral_call
-      if S.AncestralCall:IsCastable() then
-        if HR.Cast(S.AncestralCall, Settings.Commons.OffGCDasOffGCD.Racials) then return "Cast Ancestral Call"; end
-      end
-      -- actions.cds+=/adrenaline_rush,if=!buff.adrenaline_rush.up&energy.time_to_max>1
-      if S.AdrenalineRush:IsCastableP() and not Player:BuffP(S.AdrenalineRush) and EnergyTimeToMaxRounded() > 1 then
-        if HR.Cast(S.AdrenalineRush, Settings.Outlaw.GCDasOffGCD.AdrenalineRush) then return "Cast Adrenaline Rush"; end
-      end
-    end
-
-    -- Trinkets
-    -- actions.cds+=/use_item,if=buff.bloodlust.react|target.time_to_die<=20|combo_points.deficit<=2
-    if Settings.Commons.UseTrinkets then
-      if I.GalecallersBoon:IsEquipped() and I.GalecallersBoon:IsReady() then
-        HR.CastSuggested(I.GalecallersBoon);
-      end
-      if I.LustrousGoldenPlumage:IsEquipped() and I.LustrousGoldenPlumage:IsReady() then
-        HR.CastSuggested(I.LustrousGoldenPlumage);
-      end
-      if I.InvocationOfYulon:IsEquipped() and I.InvocationOfYulon:IsReady() then
-        HR.CastSuggested(I.InvocationOfYulon);
-      end
-    end
-
     -- actions.cds+=/call_action_list,name=essences,if=!stealthed.all
     if HR.CDsON() and not Player:IsStealthedP(true, true) then
       ShouldReturn = Essences();
@@ -466,11 +399,7 @@ local function CDs ()
         end
         -- actions.cds+=/killing_spree,if=variable.blade_flurry_sync&(energy.time_to_max>5|energy<15)
         if S.KillingSpree:IsCastableP(10) and (EnergyTimeToMaxRounded() > 5 or Player:EnergyPredicted() < 15) then
-          if Settings.Outlaw.KillingSpreeDisplayStyle == "Suggested" then
-            HR.CastSuggested(S.KillingSpree);
-          else
-            if HR.Cast(S.KillingSpree, (Settings.Outlaw.KillingSpreeDisplayStyle == "Cooldown")) then return "Cast Killing Spree"; end
-          end
+          if HR.Cast(S.KillingSpree, nil, Settings.Outlaw.KillingSpreeDisplayStyle) then return "Cast Killing Spree"; end
         end
         -- actions.cds+=/blade_rush,if=variable.blade_flurry_sync&energy.time_to_max>1
         if S.BladeRush:IsCastableP(S.SinisterStrike) and EnergyTimeToMaxRounded() > 1 then
@@ -487,6 +416,63 @@ local function CDs ()
         if S.Shadowmeld:IsCastable() and Ambush_Condition() then
           if HR.Cast(S.Shadowmeld, Settings.Commons.OffGCDasOffGCD.Racials) then return "Cast Shadowmeld"; end
         end
+      end
+    end
+
+    -- actions.cds=potion,if=buff.bloodlust.react|target.time_to_die<=60|buff.adrenaline_rush.up
+
+    -- Trinkets
+    -- actions.cds+=/use_item,if=buff.bloodlust.react|target.time_to_die<=20|combo_points.deficit<=2
+    if Settings.Commons.UseTrinkets then
+      if I.GalecallersBoon:IsEquipped() and I.GalecallersBoon:IsReady() then
+        HR.Cast(I.GalecallersBoon, nil, Settings.Commons.TrinketDisplayStyle);
+      end
+      if I.LustrousGoldenPlumage:IsEquipped() and I.LustrousGoldenPlumage:IsReady() then
+        HR.Cast(I.LustrousGoldenPlumage, nil, Settings.Commons.TrinketDisplayStyle);
+      end
+      if I.InvocationOfYulon:IsEquipped() and I.InvocationOfYulon:IsReady() then
+        HR.Cast(I.InvocationOfYulon, nil, Settings.Commons.TrinketDisplayStyle);
+      end
+      if I.FontOfPower:IsEquipped() and I.FontOfPower:IsReady() then
+        HR.Cast(I.FontOfPower, nil, Settings.Commons.TrinketDisplayStyle);
+      end
+      -- if=!stealthed.all&buff.adrenaline_rush.down&buff.memory_of_lucid_dreams.down&energy.time_to_max>4&rtb_buffs<5
+      if I.ComputationDevice:IsEquipped() and I.ComputationDevice:IsReady() and not Player:IsStealthedP(true, true)
+        and not Player:BuffP(S.AdrenalineRush) and not Player:BuffP(S.LucidDreamsBuff) and EnergyTimeToMaxRounded() > 4 and RtB_Buffs() < 5 then
+        HR.Cast(I.ComputationDevice, nil, Settings.Commons.TrinketDisplayStyle);
+      end
+      -- if=debuff.razor_coral_debuff.down|buff.adrenaline_rush.up&(target.health.pct<30|target.time_to_die<60)
+      if I.RazorCoral:IsEquipped() and I.RazorCoral:IsReady() and (Target:DebuffP(S.RazorCoralDebuff)
+        or Target:BuffP(S.AdrenalineRush) and (Target:HealthPercentage() < 31 or Target:FilteredTimeToDie("<", 60))) then
+        HR.Cast(I.RazorCoral, nil, Settings.Commons.TrinketDisplayStyle);
+      end
+      -- Emulate SimC default behavior to use at max stacks
+      if I.VigorTrinket:IsEquipped() and I.VigorTrinket:IsReady() and Player:BuffStack(S.VigorTrinketBuff) == 6 then
+        HR.Cast(I.VigorTrinket, nil, Settings.Commons.TrinketDisplayStyle);
+      end
+    end
+
+    -- Racials
+    if HR.CDsON() then
+      -- actions.cds+=/blood_fury
+      if S.BloodFury:IsCastable() then
+        if HR.Cast(S.BloodFury, Settings.Commons.OffGCDasOffGCD.Racials) then return "Cast Blood Fury"; end
+      end
+      -- actions.cds+=/berserking
+      if S.Berserking:IsCastable() then
+        if HR.Cast(S.Berserking, Settings.Commons.OffGCDasOffGCD.Racials) then return "Cast Berserking"; end
+      end
+      -- actions.cds+=/fireblood
+      if S.Fireblood:IsCastable() then
+        if HR.Cast(S.Fireblood, Settings.Commons.OffGCDasOffGCD.Racials) then return "Cast Fireblood"; end
+      end
+      -- actions.cds+=/ancestral_call
+      if S.AncestralCall:IsCastable() then
+        if HR.Cast(S.AncestralCall, Settings.Commons.OffGCDasOffGCD.Racials) then return "Cast Ancestral Call"; end
+      end
+      -- actions.cds+=/adrenaline_rush,if=!buff.adrenaline_rush.up&energy.time_to_max>1
+      if S.AdrenalineRush:IsCastableP() and not Player:BuffP(S.AdrenalineRush) and EnergyTimeToMaxRounded() > 1 then
+        if HR.Cast(S.AdrenalineRush, Settings.Outlaw.GCDasOffGCD.AdrenalineRush) then return "Cast Adrenaline Rush"; end
       end
     end
   end
@@ -657,7 +643,7 @@ end
 
 HR.SetAPL(260, APL);
 
--- Last Update: 2019-06-27
+-- Last Update: 2019-07-11
 
 -- # Executed before combat begins. Accepts non-harmful actions only.
 -- actions.precombat=flask
@@ -722,7 +708,7 @@ HR.SetAPL(260, APL);
 -- actions.essences+=/purifying_blast
 -- actions.essences+=/the_unbound_force
 -- actions.essences+=/ripple_in_space
--- actions.essences+=/worldvein_resonance
+-- actions.essences+=/worldvein_resonance,if=buff.lifeblood.stack<3
 -- actions.essences+=/memory_of_lucid_dreams,if=energy<45
 --
 -- # Stealth

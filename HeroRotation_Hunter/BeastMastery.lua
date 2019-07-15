@@ -53,6 +53,7 @@ Spell.Hunter.BeastMastery = {
   Intimidation                          = Spell(19577),
   CounterShot                           = Spell(147362),
   Exhilaration                          = Spell(109304),
+  RazorCoralDebuff                      = Spell(303568),
   -- Essences
   BloodOfTheEnemy                       = MultiSpell(297108, 298273, 298277),
   MemoryOfLucidDreams                   = MultiSpell(298357, 299372, 299374),
@@ -74,7 +75,8 @@ local S = Spell.Hunter.BeastMastery;
 -- Items
 if not Item.Hunter then Item.Hunter = {} end
 Item.Hunter.BeastMastery = {
-  BattlePotionofAgility            = Item(163223)
+  PotionofUnbridledFury            = Item(169299),
+  AshvanesRazorCoral               = Item(169311)
 };
 local I = Item.Hunter.BeastMastery;
 
@@ -154,8 +156,8 @@ local function APL()
     -- snapshot_stats
     if Everyone.TargetIsValid() then
       -- potion
-      if I.BattlePotionofAgility:IsReady() and Settings.Commons.UsePotions then
-        if HR.CastSuggested(I.BattlePotionofAgility) then return "battle_potion_of_agility 6"; end
+      if I.PotionofUnbridledFury:IsReady() and Settings.Commons.UsePotions then
+        if HR.CastSuggested(I.PotionofUnbridledFury) then return "battle_potion_of_agility 6"; end
       end
       -- worldvein_resonance
       if S.WorldveinResonance:IsCastableP() then
@@ -201,8 +203,8 @@ local function APL()
       if HR.Cast(S.LightsJudgment) then return "lights_judgment 60"; end
     end
     -- potion,if=buff.bestial_wrath.up&buff.aspect_of_the_wild.up&(target.health.pct<35|!talent.killer_instinct.enabled)|target.time_to_die<25
-    if I.BattlePotionofAgility:IsReady() and Settings.Commons.UsePotions and (Player:BuffP(S.BestialWrathBuff) and Player:BuffP(S.AspectoftheWildBuff) and (Target:HealthPercentage() < 35 or not S.KillerInstinct:IsAvailable()) or Target:TimeToDie() < 25) then
-      if HR.CastSuggested(I.BattlePotionofAgility) then return "battle_potion_of_agility 68"; end
+    if I.PotionofUnbridledFury:IsReady() and Settings.Commons.UsePotions and (Player:BuffP(S.BestialWrathBuff) and Player:BuffP(S.AspectoftheWildBuff) and (Target:HealthPercentage() < 35 or not S.KillerInstinct:IsAvailable()) or Target:TimeToDie() < 25) then
+      if HR.CastSuggested(I.PotionofUnbridledFury) then return "battle_potion_of_agility 68"; end
     end
     -- worldvein_resonance,if=buff.lifeblood.stack<4
     if S.WorldveinResonance:IsCastableP() and (Player:BuffStackP(S.Lifeblood) < 4) then
@@ -392,6 +394,10 @@ local function APL()
     Everyone.Interrupt(40, S.CounterShot, Settings.Commons.OffGCDasOffGCD.CounterShot, StunInterrupts);
     -- auto_shot
     -- use_items
+    -- use_item,name=ashvanes_razor_coral,if=buff.aspect_of_the_wild.remains>15|debuff.razor_coral_debuff.down|target.time_to_die<20
+    if I.AshvanesRazorCoral:IsReady() and (Player:BuffRemainsP(S.AspectoftheWildBuff) > 15 or Target:DebuffDownP(S.RazorCoralDebuff) or Target:TimeToDie() < 20) then
+      if HR.CastSuggested(I.AshvanesRazorCoral) then return "ashvanes_razor_coral"; end
+    end
     -- call_action_list,name=cds
     if (true) then
       local ShouldReturn = Cds(); if ShouldReturn then return ShouldReturn; end

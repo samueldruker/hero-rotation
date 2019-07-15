@@ -24,6 +24,8 @@
       StealthOOC = true,
       -- Trinkets
       UseTrinkets = true,
+      TrinketDisplayStyle = "Suggested",
+      -- Essences
       EssenceDisplayStyle = "Suggested",
       -- {Display GCD as OffGCD, ForceReturn}
       GCDasOffGCD = {
@@ -54,6 +56,8 @@
       RangedMultiDoT = true,
       -- Suggest Garrote even when Vanish is up
       AlwaysSuggestGarrote = false,
+      -- Use Priority Rotation
+      UsePriorityRotation = "Never",
       -- {Display GCD as OffGCD, ForceReturn}
       GCDasOffGCD = {
         Vendetta = true,
@@ -126,6 +130,7 @@
   CreatePanelOption("Slider", CP_Rogue, "APL.Rogue.Commons.FeintHP", {0, 100, 1}, "Feint HP", "Set the Feint HP threshold.");
   CreatePanelOption("CheckButton", CP_Rogue, "APL.Rogue.Commons.StealthOOC", "Stealth Reminder (OOC)", "Show Stealth Reminder when out of combat.");
   CreatePanelOption("CheckButton", CP_Rogue, "APL.Rogue.Commons.UseTrinkets", "Use Trinkets", "Use Trinkets as part of the rotation");
+  CreatePanelOption("Dropdown", CP_Rogue, "APL.Rogue.Commons.TrinketDisplayStyle", {"Main Icon", "Suggested", "Cooldown"}, "Trinket Display Style", "Define which icon display style to use for Trinkets.");
   CreatePanelOption("Dropdown", CP_Rogue, "APL.Rogue.Commons.EssenceDisplayStyle", {"Main Icon", "Suggested", "Cooldown"}, "Essence Display Style", "Define which icon display style to use for active Azerite Essences.");
   CreateARPanelOptions(CP_Rogue, "APL.Rogue.Commons");
   -- Assassination
@@ -135,6 +140,7 @@
   CreatePanelOption("Slider", CP_Assassination, "APL.Rogue.Assassination.PoisonRefreshCombat", {0, 55, 1}, "Combat Poison Refresh", "Set the timer for the Poison Refresh (In Combat)");
   CreatePanelOption("CheckButton", CP_Assassination, "APL.Rogue.Assassination.RangedMultiDoT", "Suggest Ranged Multi-DoT", "Suggest multi-DoT targets at Fan of Knives range (10 yards) instead of only melee range. Disabling will only suggest DoT targets within melee range.");
   CreatePanelOption("CheckButton", CP_Assassination, "APL.Rogue.Assassination.AlwaysSuggestGarrote", "Always Suggest Garrote", "Don't prevent Garrote suggestions when using Subterfuge and Vanish is ready. These should ideally be synced, but can be useful if holding Vanish for specific fights.");
+  CreatePanelOption("Dropdown", CP_Assassination, "APL.Rogue.Assassination.UsePriorityRotation", {"Never", "On Bosses", "Always"}, "Use Priority Rotation", "Select when to show rotation for maximum priority damage (at the cost of overall AoE damage.)");
   CreateARPanelOptions(CP_Assassination, "APL.Rogue.Assassination");
   -- Outlaw
   CreatePanelOption("Dropdown", CP_Outlaw, "APL.Rogue.Outlaw.RolltheBonesLogic", {"SimC", "1+ Buff", "Broadside", "Buried Treasure", "Grand Melee", "Skull and Crossbones", "Ruthless Precision", "True Bearing"}, "Roll the Bones Logic", "Define the Roll the Bones logic to follow.\n(SimC highly recommended!)");
@@ -152,4 +158,4 @@
   CreatePanelOption("CheckButton", CP_Subtlety, "APL.Rogue.Subtlety.StealthMacro.Vanish", "Stealth Combo - Vanish", "Allow suggesting Vanish stealth ability combos (recommended)");
   CreatePanelOption("CheckButton", CP_Subtlety, "APL.Rogue.Subtlety.StealthMacro.Shadowmeld", "Stealth Combo - Shadowmeld", "Allow suggesting Shadowmeld stealth ability combos (recommended)");
   CreatePanelOption("CheckButton", CP_Subtlety, "APL.Rogue.Subtlety.StealthMacro.ShadowDance", "Stealth Combo - Shadow Dance", "Allow suggesting Shadow Dance stealth ability combos (recommended)");
-  CreatePanelOption("Dropdown", CP_Subtlety, "APL.Rogue.Subtlety.UsePriorityRotation", {"Never", "On Bosses", "Always"}, "Use Priority Rotation", "Select when to show rotation for maximum priority damage (at the cost of overall damage). Zul Mythic will use priority rotation automatically without setting this.");
+  CreatePanelOption("Dropdown", CP_Subtlety, "APL.Rogue.Subtlety.UsePriorityRotation", {"Never", "On Bosses", "Always"}, "Use Priority Rotation", "Select when to show rotation for maximum priority damage (at the cost of overall AoE damage.) Zul Mythic will use priority rotation automatically without setting this.");

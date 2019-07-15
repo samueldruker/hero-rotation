@@ -73,10 +73,12 @@ local S = Spell.Mage.Fire;
 -- Items
 if not Item.Mage then Item.Mage = {} end
 Item.Mage.Fire = {
-  BattlePotionofIntellect          = Item(163222),
+  PotionofUnbridledFury            = Item(169299),
   TidestormCodex                   = Item(165576),
   MalformedHeraldsLegwraps         = Item(167835),
-  PocketsizedComputationDevice     = Item(167555)
+  PocketsizedComputationDevice     = Item(167555),
+  AzsharasFontofPower              = Item(169314),
+  HyperthreadWristwraps            = Item(168989)
 };
 local I = Item.Mage.Fire;
 
@@ -180,8 +182,8 @@ local function APL()
         if HR.Cast(S.MirrorImage) then return "mirror_image 10"; end
       end
       -- potion
-      if I.BattlePotionofIntellect:IsReady() and Settings.Commons.UsePotions then
-        if HR.CastSuggested(I.BattlePotionofIntellect) then return "battle_potion_of_intellect 12"; end
+      if I.PotionofUnbridledFury:IsReady() and Settings.Commons.UsePotions then
+        if HR.CastSuggested(I.PotionofUnbridledFury) then return "battle_potion_of_intellect 12"; end
       end
       -- pyroblast
       if S.Pyroblast:IsCastableP() then
@@ -225,8 +227,8 @@ local function APL()
       if HR.Cast(S.Combustion, Settings.Fire.OffGCDasOffGCD.Combustion) then return "combustion 110"; end
     end
     -- potion
-    if I.BattlePotionofIntellect:IsReady() and Settings.Commons.UsePotions then
-      if HR.CastSuggested(I.BattlePotionofIntellect) then return "battle_potion_of_intellect 130"; end
+    if I.PotionofUnbridledFury:IsReady() and Settings.Commons.UsePotions then
+      if HR.CastSuggested(I.PotionofUnbridledFury) then return "battle_potion_of_intellect 130"; end
     end
     -- blood_fury
     if S.BloodFury:IsCastableP() and HR.CDsON() then
@@ -298,21 +300,29 @@ local function APL()
     if S.LightsJudgment:IsCastableP() and HR.CDsON() and (Player:BuffDownP(S.CombustionBuff)) then
       if HR.Cast(S.LightsJudgment) then return "lights_judgment 234"; end
     end
-    -- call_action_list,name=bm_combustion_phase,if=azerite.blaster_master.enabled&talent.flame_on.enabled&!essence.memory_of_lucid_dreams.major
-    if (S.BlasterMaster:AzeriteEnabled() and S.FlameOn:IsAvailable() and not S.MemoryOfLucidDreams:IsAvailable()) then
-      local ShouldReturn = BmCombustionPhase(); if ShouldReturn then return ShouldReturn; end
+    -- use_item,name=azsharas_font_of_power
+    if I.AzsharasFontofPower:IsReady() then
+      if HR.CastSuggested(I.AzsharasFontofPower) then return "azsharas_font_of_power"; end
+    end
+    -- use_item,name=hyperthread_wristwraps,if=buff.combustion.up&action.fire_blast.charges_fractional<1.2
+    if I.HyperthreadWristwraps:IsReady() and (Player:BuffP(S.CombustionBuff) and S.FireBlast:ChargesFractionalP() < 1.2) then
+      if HR.CastSuggested(I.HyperthreadWristwraps) then return "hyperthread_wristwraps"; end
     end
     -- blood_of_the_enemy
     if S.BloodOfTheEnemy:IsCastableP() then
       if HR.Cast(S.BloodOfTheEnemy, Settings.Fire.GCDasOffGCD.Essences) then return "blood_of_the_enemy 244"; end
     end
-    -- memory_of_lucid_dreams
-    if S.MemoryOfLucidDreams:IsCastableP() then
-      if HR.Cast(S.MemoryOfLucidDreams, Settings.Fire.GCDasOffGCD.Essences) then return "memory_of_lucid_dreams 246"; end
-    end
     -- guardian_of_azeroth
     if S.GuardianOfAzeroth:IsCastableP() then
       if HR.Cast(S.GuardianOfAzeroth, Settings.Fire.GCDasOffGCD.Essences) then return "guardian_of_azeroth 248"; end
+    end
+    -- call_action_list,name=bm_combustion_phase,if=azerite.blaster_master.enabled&talent.flame_on.enabled&!essence.memory_of_lucid_dreams.major
+    if (S.BlasterMaster:AzeriteEnabled() and S.FlameOn:IsAvailable() and not S.MemoryOfLucidDreams:IsAvailable()) then
+      local ShouldReturn = BmCombustionPhase(); if ShouldReturn then return ShouldReturn; end
+    end
+    -- memory_of_lucid_dreams
+    if S.MemoryOfLucidDreams:IsCastableP() then
+      if HR.Cast(S.MemoryOfLucidDreams, Settings.Fire.GCDasOffGCD.Essences) then return "memory_of_lucid_dreams 246"; end
     end
     -- rune_of_power,if=buff.combustion.down
     if S.RuneofPower:IsCastableP() and (Player:BuffDownP(S.CombustionBuff)) then
@@ -331,8 +341,8 @@ local function APL()
       if HR.Cast(S.Combustion, Settings.Fire.OffGCDasOffGCD.Combustion) then return "combustion 282"; end
     end
     -- potion
-    if I.BattlePotionofIntellect:IsReady() and Settings.Commons.UsePotions then
-      if HR.CastSuggested(I.BattlePotionofIntellect) then return "battle_potion_of_intellect 288"; end
+    if I.PotionofUnbridledFury:IsReady() and Settings.Commons.UsePotions then
+      if HR.CastSuggested(I.PotionofUnbridledFury) then return "battle_potion_of_intellect 288"; end
     end
     -- blood_fury
     if S.BloodFury:IsCastableP() and HR.CDsON() then

@@ -70,8 +70,9 @@ local S = Spell.Warlock.Destruction;
 -- Items
 if not Item.Warlock then Item.Warlock = {} end
 Item.Warlock.Destruction = {
-  BattlePotionofIntellect          = Item(163222),
-  AzsharasFontofPower              = Item(169314)
+  PotionofUnbridledFury            = Item(169299),
+  AzsharasFontofPower              = Item(169314),
+  PocketsizedComputationDevice     = Item(167555)
 };
 local I = Item.Warlock.Destruction;
 
@@ -205,8 +206,8 @@ local function APL()
     -- snapshot_stats
     if Everyone.TargetIsValid() then
       -- potion
-      if I.BattlePotionofIntellect:IsReady() and Settings.Commons.UsePotions then
-        if HR.CastSuggested(I.BattlePotionofIntellect) then return "battle_potion_of_intellect 10"; end
+      if I.PotionofUnbridledFury:IsReady() and Settings.Commons.UsePotions then
+        if HR.CastSuggested(I.PotionofUnbridledFury) then return "battle_potion_of_intellect 10"; end
       end
       -- soul_fire
       if S.SoulFire:IsCastableP() then
@@ -359,8 +360,8 @@ local function APL()
       if HR.Cast(S.RippleInSpace, Settings.Destruction.GCDasOffGCD.Essences) then return "ripple_in_space 231"; end
     end
     -- potion,if=pet.infernal.active|target.time_to_die<30
-    if I.BattlePotionofIntellect:IsReady() and Settings.Commons.UsePotions and (S.SummonInfernal:CooldownRemainsP() > 150 or Target:TimeToDie() < 30) then
-      if HR.CastSuggested(I.BattlePotionofIntellect) then return "battle_potion_of_intellect 233"; end
+    if I.PotionofUnbridledFury:IsReady() and Settings.Commons.UsePotions and (S.SummonInfernal:CooldownRemainsP() > 150 or Target:TimeToDie() < 30) then
+      if HR.CastSuggested(I.PotionofUnbridledFury) then return "battle_potion_of_intellect 233"; end
     end
     -- berserking,if=pet.infernal.active|buff.memory_of_lucid_dreams.remains|buff.dark_soul_instability.remains|target.time_to_die<30
     if S.Berserking:IsCastableP() and HR.CDsON() and (S.SummonInfernal:CooldownRemainsP() > 150 or bool(Player:BuffRemainsP(S.MemoryOfLucidDreamsBuff)) or Player:BuffP(S.DarkSoulInstabilityBuff) or Target:TimeToDie() < 30) then
@@ -375,6 +376,10 @@ local function APL()
       if HR.Cast(S.Fireblood, Settings.Commons.OffGCDasOffGCD.Racials) then return "fireblood 247"; end
     end
     -- use_items,if=pet.infernal.active|buff.memory_of_lucid_dreams.remains|buff.dark_soul_instability.remains|target.time_to_die<30
+    -- use_item,name=pocketsized_computation_device,if=dot.immolate.remains>=5
+    if I.PocketsizedComputationDevice:IsReady() and (Target:DebuffRemainsP(S.ImmolateDebuff) >= 5) then
+      if HR.CastSuggested(I.PocketsizedComputationDevice) then return "pocketsized_computation_device 248"; end
+    end
   end
   Havoc = function()
     -- conflagrate,if=buff.backdraft.down&soul_shard>=1&soul_shard<=4
