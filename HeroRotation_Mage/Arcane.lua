@@ -63,15 +63,15 @@ Spell.Mage.Arcane = {
   Counterspell                          = Spell(2139),
   --Shimmer                               = Spell(212653),
   Blink                                 = MultiSpell(1953, 212653),
-  BloodOfTheEnemy                       = MultiSpell(297108, 298273, 298277),
-  MemoryOfLucidDreams                   = MultiSpell(298357, 299372, 299374),
+  BloodofTheEnemy                       = MultiSpell(297108, 298273, 298277),
+  MemoryofLucidDreams                   = MultiSpell(298357, 299372, 299374),
   PurifyingBlast                        = MultiSpell(295337, 299345, 299347),
   RippleInSpace                         = MultiSpell(302731, 302982, 302983),
   ConcentratedFlame                     = MultiSpell(295373, 299349, 299353),
   TheUnboundForce                       = MultiSpell(298452, 299376, 299378),
   WorldveinResonance                    = MultiSpell(295186, 298628, 299334),
   FocusedAzeriteBeam                    = MultiSpell(295258, 299336, 299338),
-  GuardianOfAzeroth                     = MultiSpell(295840, 299355, 299358),
+  GuardianofAzeroth                     = MultiSpell(295840, 299355, 299358),
   RecklessForce                         = Spell(302932),
   CyclotronicBlast                      = Spell(167672)
 };
@@ -82,7 +82,8 @@ if not Item.Mage then Item.Mage = {} end
 Item.Mage.Arcane = {
   PotionofFocusedResolve           = Item(168506),
   TidestormCodex                   = Item(165576),
-  PocketsizedComputationDevice     = Item(167555)
+  PocketsizedComputationDevice     = Item(167555),
+  AzsharasFontofPower              = Item(169314)
 };
 local I = Item.Mage.Arcane;
 
@@ -258,6 +259,10 @@ local function APL()
     if S.LightsJudgment:IsCastableP() and HR.CDsON() and (Player:BuffDownP(S.ArcanePowerBuff)) then
       if HR.Cast(S.LightsJudgment) then return "lights_judgment 72"; end
     end
+    -- use_item,name=azsharas_font_of_power
+    if I.AzsharasFontofPower:IsReady() then
+      if HR.CastSuggested(I.AzsharasFontofPower) then return "azsharas_font_of_power 73"; end
+    end
     -- rune_of_power,if=!buff.arcane_power.up&(mana.pct>=50|cooldown.arcane_power.remains=0)&(buff.arcane_charge.stack=buff.arcane_charge.max_stack)
     if S.RuneofPower:IsCastableP() and (not Player:BuffP(S.ArcanePowerBuff) and (Player:ManaPercentageP() >= 50 or S.ArcanePower:CooldownRemainsP() == 0) and (Player:ArcaneChargesP() == Player:ArcaneChargesMax())) then
       if HR.Cast(S.RuneofPower, Settings.Arcane.GCDasOffGCD.RuneofPower) then return "rune_of_power 76"; end
@@ -271,10 +276,6 @@ local function APL()
       if HR.Cast(S.ArcanePower, Settings.Arcane.GCDasOffGCD.ArcanePower) then return "arcane_power 88"; end
     end
     -- use_items,if=buff.arcane_power.up|target.time_to_die<cooldown.arcane_power.remains
-    -- use_item,name=pocketsized_computation_device,if=!cooldown.cyclotronic_blast.duration&(buff.arcane_power.up|target.time_to_die<cooldown.arcane_power.remains)
-    if I.PocketsizedComputationDevice:IsReady() and (not bool(S.CyclotronicBlast:CooldownRemainsP()) and (Player:BuffP(S.ArcanePowerBuff) or Target:TimeToDie() < S.ArcanePower:CooldownRemainsP())) then
-      if HR.CastSuggested(I.PocketsizedComputationDevice) then return "pocketsized_computation_device 90"; end
-    end
     -- blood_fury
     if S.BloodFury:IsCastableP() and HR.CDsON() then
       if HR.Cast(S.BloodFury, Settings.Commons.OffGCDasOffGCD.Racials) then return "blood_fury 91"; end
@@ -353,8 +354,8 @@ local function APL()
     if I.TidestormCodex:IsReady() and (Player:BuffDownP(S.RuneofPowerBuff) and not bool(Player:BuffStackP(S.ArcanePowerBuff)) and S.ArcanePower:CooldownRemainsP() > 20) then
       if HR.CastSuggested(I.TidestormCodex) then return "tidestorm_codex 249"; end
     end
-    -- use_item,name=pocketsized_computation_device,if=cooldown.cyclotronic_blast.duration&buff.rune_of_power.down&!buff.arcane_power.react&cooldown.arcane_power.remains>20
-    if I.PocketsizedComputationDevice:IsReady() and ((not S.CyclotronicBlast:IsAvailable() or bool(S.CyclotronicBlast:CooldownRemainsP())) and Player:BuffDownP(S.RuneofPowerBuff) and Player:BuffDownP(S.ArcanePowerBuff) and S.ArcanePower:CooldownRemainsP() > 20) then
+    -- use_item,effect_name=cyclotronic_blast,if=buff.rune_of_power.down&!buff.arcane_power.react&cooldown.arcane_power.remains>20
+    if I.PocketsizedComputationDevice:IsReady() and S.CyclotronicBlast:IsAvailable() and (Player:BuffDownP(S.RuneofPowerBuff) and Player:BuffDownP(S.ArcanePowerBuff) and S.ArcanePower:CooldownRemainsP() > 20) then
       if HR.CastSuggested(I.PocketsizedComputationDevice) then return "pocketsized_computation_device 250"; end
     end
     -- rune_of_power,if=buff.arcane_charge.stack=buff.arcane_charge.max_stack&(full_recharge_time<=execute_time|full_recharge_time<=cooldown.arcane_power.remains|target.time_to_die<=cooldown.arcane_power.remains)
@@ -388,8 +389,8 @@ local function APL()
   end
   Essences = function()
     -- blood_of_the_enemy,if=burn_phase&buff.arcane_power.down&buff.rune_of_power.down&buff.arcane_charge.stack=buff.arcane_charge.max_stack|time_to_die<cooldown.arcane_power.remains
-    if S.BloodOfTheEnemy:IsCastableP() and (BurnPhase:On() and Player:BuffDownP(S.ArcanePowerBuff) and Player:BuffDownP(S.RuneofPowerBuff) and Player:ArcaneChargesP() == Player:ArcaneChargesMax() or Target:TimeToDie() < S.ArcanePower:CooldownRemainsP()) then
-      if HR.Cast(S.BloodOfTheEnemy, Settings.Arcane.GCDasOffGCD.Essences) then return "blood_of_the_enemy"; end
+    if S.BloodofTheEnemy:IsCastableP() and (BurnPhase:On() and Player:BuffDownP(S.ArcanePowerBuff) and Player:BuffDownP(S.RuneofPowerBuff) and Player:ArcaneChargesP() == Player:ArcaneChargesMax() or Target:TimeToDie() < S.ArcanePower:CooldownRemainsP()) then
+      if HR.Cast(S.BloodofTheEnemy, Settings.Arcane.GCDasOffGCD.Essences) then return "blood_of_the_enemy"; end
     end
     -- concentrated_flame,line_cd=6,if=buff.rune_of_power.down&buff.arcane_power.down&(!burn_phase|time_to_die<cooldown.arcane_power.remains)&mana.time_to_max>=execute_time
     if S.ConcentratedFlame:IsCastableP() and (Player:BuffDownP(S.RuneofPowerBuff) and Player:BuffDownP(S.ArcanePowerBuff) and (not BurnPhase:On() or Target:TimeToDie() < S.ArcanePower:CooldownRemainsP()) and Player:ManaTimeToMax() >= S.ConcentratedFlame:ExecuteTime()) then
@@ -400,8 +401,8 @@ local function APL()
       if HR.Cast(S.FocusedAzeriteBeam, Settings.Arcane.GCDasOffGCD.Essences) then return "focused_azerite_beam"; end
     end
     -- guardian_of_azeroth,if=buff.rune_of_power.down&buff.arcane_power.down
-    if S.GuardianOfAzeroth:IsCastableP() and (Player:BuffDownP(S.RuneofPowerBuff) and Player:BuffDownP(S.ArcanePowerBuff)) then
-      if HR.Cast(S.GuardianOfAzeroth, Settings.Arcane.GCDasOffGCD.Essences) then return "guardian_of_azeroth"; end
+    if S.GuardianofAzeroth:IsCastableP() and (Player:BuffDownP(S.RuneofPowerBuff) and Player:BuffDownP(S.ArcanePowerBuff)) then
+      if HR.Cast(S.GuardianofAzeroth, Settings.Arcane.GCDasOffGCD.Essences) then return "guardian_of_azeroth"; end
     end
     -- purifying_blast,if=buff.rune_of_power.down&buff.arcane_power.down
     if S.PurifyingBlast:IsCastableP() and (Player:BuffDownP(S.RuneofPowerBuff) and Player:BuffDownP(S.ArcanePowerBuff)) then
@@ -416,8 +417,8 @@ local function APL()
       if HR.Cast(S.TheUnboundForce, Settings.Arcane.GCDasOffGCD.Essences) then return "the_unbound_force"; end
     end
     -- memory_of_lucid_dreams,if=!burn_phase&buff.arcane_power.down&cooldown.arcane_power.remains&buff.arcane_charge.stack=buff.arcane_charge.max_stack&(!talent.rune_of_power.enabled|action.rune_of_power.charges)|time_to_die<cooldown.arcane_power.remains
-    if S.MemoryOfLucidDreams:IsCastableP() and (not BurnPhase:On() and Player:BuffDownP(S.ArcanePowerBuff) and bool(S.ArcanePower:CooldownRemainsP()) and Player:ArcaneCharges() == Player:ArcaneChargesMax() and (not S.RuneofPower:IsAvailable() or bool(S.RuneofPower:Charges())) or Target:TimeToDie() < S.ArcanePower:CooldownRemainsP()) then
-      if HR.Cast(S.MemoryOfLucidDreams, Settings.Arcane.GCDasOffGCD.Essences) then return "memory_of_lucid_dreams"; end
+    if S.MemoryofLucidDreams:IsCastableP() and (not BurnPhase:On() and Player:BuffDownP(S.ArcanePowerBuff) and bool(S.ArcanePower:CooldownRemainsP()) and Player:ArcaneCharges() == Player:ArcaneChargesMax() and (not S.RuneofPower:IsAvailable() or bool(S.RuneofPower:Charges())) or Target:TimeToDie() < S.ArcanePower:CooldownRemainsP()) then
+      if HR.Cast(S.MemoryofLucidDreams, Settings.Arcane.GCDasOffGCD.Essences) then return "memory_of_lucid_dreams"; end
     end
     -- worldvein_resonance,if=burn_phase&buff.arcane_power.down&buff.rune_of_power.down&buff.arcane_charge.stack=buff.arcane_charge.max_stack|time_to_die<cooldown.arcane_power.remains
     if S.WorldveinResonance:IsCastableP() and (BurnPhase:On() and Player:BuffDownP(S.ArcanePowerBuff) and Player:BuffDownP(S.RuneofPowerBuff) and Player:ArcaneCharges() == Player:ArcaneChargesMax() or Target:TimeToDie() < S.ArcanePower:CooldownRemainsP()) then
