@@ -69,7 +69,8 @@ Spell.Hunter.BeastMastery = {
   GuardianofAzeroth                     = MultiSpell(295840, 299355, 299358),
   Lifeblood                             = MultiSpell(295137, 305694),
   RecklessForceCounter                  = MultiSpell(298409, 302917),
-  RecklessForce                         = Spell(302932),
+  RecklessForceBuff                     = Spell(302932),
+  -- Trinket Effects
   CyclotronicBlast                      = Spell(167672),
   -- Misc
   PoolFocus                             = Spell(9999000010),
@@ -193,9 +194,9 @@ local function APL()
       if S.MemoryofLucidDreams:IsCastableP() then
         if HR.Cast(S.MemoryofLucidDreams, Settings.BeastMastery.GCDasOffGCD.Essences) then return "memory_of_lucid_dreams"; end
       end
-      -- use_item,name=pocketsized_computation_device,if=!raid_event.invulnerable.exists
-      if I.PocketsizedComputationDevice:IsReady() then
-        if HR.CastSuggested(I.PocketsizedComputationDevice) then return "pocketsized_computation_device precombat"; end
+      -- use_item,effect_name=cyclotronic_blast,if=!raid_event.invulnerable.exists
+      if I.PocketsizedComputationDevice:IsReady() and S.CyclotronicBlast:IsAvailable() then
+        if HR.CastSuggested(I.PocketsizedComputationDevice) then return "cyclotronic_blast precombat"; end
       end
       -- focused_azerite_beam,if=!raid_event.invulnerable.exists
       if S.FocusedAzeriteBeam:IsCastableP() then
@@ -319,7 +320,7 @@ local function APL()
       if HR.Cast(S.BloodofTheEnemy, Settings.BeastMastery.GCDasOffGCD.Essences) then return "focused_azerite_beam"; end
     end
     -- the_unbound_force,if=buff.reckless_force.up|buff.reckless_force_counter.stack<10
-    if S.TheUnboundForce:IsCastableP() and (Player:BuffP(S.RecklessForce) or Player:BuffStackP(S.RecklessForceCounter) < 10) then
+    if S.TheUnboundForce:IsCastableP() and (Player:BuffP(S.RecklessForceBuff) or Player:BuffStackP(S.RecklessForceCounter) < 10) then
       if HR.Cast(S.TheUnboundForce, Settings.BeastMastery.GCDasOffGCD.Essences) then return "focused_azerite_beam"; end
     end
     -- multishot,if=azerite.rapid_reload.enabled&active_enemies>2
@@ -389,7 +390,7 @@ local function APL()
       if HR.Cast(S.BloodofTheEnemy, Settings.BeastMastery.GCDasOffGCD.Essences) then return "focused_azerite_beam"; end
     end
     -- the_unbound_force,if=buff.reckless_force.up|buff.reckless_force_counter.stack<10
-    if S.TheUnboundForce:IsCastableP() and (Player:BuffP(S.RecklessForce) or Player:BuffStackP(S.RecklessForceCounter) < 10) then
+    if S.TheUnboundForce:IsCastableP() and (Player:BuffP(S.RecklessForceBuff) or Player:BuffStackP(S.RecklessForceCounter) < 10) then
       if HR.Cast(S.TheUnboundForce, Settings.BeastMastery.GCDasOffGCD.Essences) then return "focused_azerite_beam"; end
     end
     -- barrage
@@ -428,6 +429,10 @@ local function APL()
     Everyone.Interrupt(40, S.CounterShot, Settings.Commons.OffGCDasOffGCD.CounterShot, StunInterrupts);
     -- auto_shot
     -- use_items
+    -- use_item,effect_name=cyclotronic_blast
+    if I.PocketsizedComputationDevice:IsReady() and S.CyclotronicBlast:IsAvailable() then
+      if HR.CastSuggested(I.PocketsizedComputationDevice) then return "cyclotronic_blast"; end
+    end
     -- use_item,name=ashvanes_razor_coral,if=buff.aspect_of_the_wild.remains>15|debuff.razor_coral_debuff.down|target.time_to_die<20
     if I.AshvanesRazorCoral:IsReady() and (Player:BuffRemainsP(S.AspectoftheWildBuff) > 15 or Target:DebuffDownP(S.RazorCoralDebuff) or Target:TimeToDie() < 20) then
       if HR.CastSuggested(I.AshvanesRazorCoral) then return "ashvanes_razor_coral"; end
