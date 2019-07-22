@@ -65,9 +65,10 @@ Spell.DemonHunter.Havoc = {
   WorldveinResonance                    = MultiSpell(295186, 298628, 299334),
   FocusedAzeriteBeam                    = MultiSpell(295258, 299336, 299338),
   GuardianofAzeroth                     = MultiSpell(295840, 299355, 299358),
-  Lifeblood                             = MultiSpell(295137, 305694),
+  LifebloodBuff                         = MultiSpell(295137, 305694),
   RecklessForceCounter                  = MultiSpell(298409, 302917),
-  RecklessForceBuff                     = Spell(302932)
+  RecklessForceBuff                     = Spell(302932),
+  ConcentratedFlameBurn                 = Spell(295368)
 };
 local S = Spell.DemonHunter.Havoc;
 
@@ -219,7 +220,7 @@ local function APL()
       if HR.Cast(S.RippleInSpace, Settings.Havoc.GCDasOffGCD.Essences) then return "ripple_in_space"; end
     end
     -- worldvein_resonance,if=buff.lifeblood.stack<3
-    if S.WorldveinResonance:IsCastableP() and (Player:BuffStackP(S.Lifeblood) < 3) then
+    if S.WorldveinResonance:IsCastableP() and (Player:BuffStackP(S.LifebloodBuff) < 3) then
       if HR.Cast(S.WorldveinResonance, Settings.Havoc.GCDasOffGCD.Essences) then return "worldvein_resonance"; end
     end
     -- memory_of_lucid_dreams,if=fury<40&buff.metamorphosis.up
@@ -329,7 +330,7 @@ local function APL()
   Normal = function()
     -- vengeful_retreat,if=talent.momentum.enabled&buff.prepared.down&time>1
     if S.VengefulRetreat:IsCastableP("Melee", true) and (S.Momentum:IsAvailable() and Player:BuffDownP(S.PreparedBuff) and HL.CombatTime() > 1) then
-      if HR.Cast(S.VengefulRetreat) then return "vengeful_retreat 149"; end
+      if HR.Cast(S.VengefulRetreat, Settings.Havoc.OffGCDasOffGCD.VengefulRetreat) then return "vengeful_retreat 149"; end
     end
     -- fel_rush,if=(variable.waiting_for_momentum|talent.fel_mastery.enabled)&(charges=2|(raid_event.movement.in>10&raid_event.adds.in>10))
     if S.FelRush:IsCastableP(20, true) and ((bool(VarWaitingForMomentum) or S.FelMastery:IsAvailable()) and ConserveFelRush()) then

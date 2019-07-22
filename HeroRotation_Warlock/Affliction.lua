@@ -74,6 +74,8 @@ Spell.Warlock.Affliction = {
   FocusedAzeriteBeam                    = MultiSpell(295258, 299336, 299338),
   GuardianofAzeroth                     = MultiSpell(295840, 299355, 299358),
   VisionofPerfectionMinor               = MultiSpell(296320, 299367, 299369),
+  LifebloodBuff                         = MultiSpell(295137, 305694),
+  ConcentratedFlameBurn                 = Spell(295368),
   RecklessForceBuff                     = Spell(302932)
 };
 local S = Spell.Warlock.Affliction;
@@ -187,6 +189,7 @@ end
 
 S.ShadowBolt:RegisterInFlight()
 S.SeedofCorruption:RegisterInFlight()
+S.ConcentratedFlame:RegisterInFlight()
 
 local function EvaluateTargetIfFilterAgony160(TargetUnit)
   return TargetUnit:DebuffRemainsP(S.AgonyDebuff)
@@ -335,16 +338,21 @@ local function APL()
       if I.PotionofUnbridledFury:IsReady() and Settings.Commons.UsePotions then
         if HR.CastSuggested(I.PotionofUnbridledFury) then return "battle_potion_of_intellect 14"; end
       end
-      -- seed_of_corruption,if=spell_targets.seed_of_corruption_aoe>=3
-      if S.SeedofCorruption:IsCastableP() and Player:DebuffDownP(S.SeedofCorruptionDebuff) and (EnemiesCount >= 3) then
+      -- use_item,name=azsharas_font_of_power
+      -- Using main icon, since only Haunt will be suggested precombat if equipped and that's optional
+      if I.AzsharasFontofPower:IsReady() then
+        if HR.Cast(I.AzsharasFontofPower) then return "azsharas_font_of_power 15"; end
+      end
+      -- seed_of_corruption,if=spell_targets.seed_of_corruption_aoe>=3&!equipped.169314
+      if S.SeedofCorruption:IsCastableP() and Player:DebuffDownP(S.SeedofCorruptionDebuff) and (EnemiesCount >= 3 and not I.AzsharasFontofPower:IsEquipped()) then
         if HR.Cast(S.SeedofCorruption) then return "seed_of_corruption 16"; end
       end
       -- haunt
       if S.Haunt:IsCastableP() and Player:DebuffDownP(S.HauntDebuff) then
         if HR.Cast(S.Haunt) then return "haunt 20"; end
       end
-      -- shadow_bolt,if=!talent.haunt.enabled&spell_targets.seed_of_corruption_aoe<3
-      if S.ShadowBolt:IsCastableP() and (not S.Haunt:IsAvailable() and EnemiesCount < 3) then
+      -- shadow_bolt,if=!talent.haunt.enabled&spell_targets.seed_of_corruption_aoe<3&!equipped.169314
+      if S.ShadowBolt:IsCastableP() and (not S.Haunt:IsAvailable() and EnemiesCount < 3 and not I.AzsharasFontofPower:IsEquipped()) then
         if HR.Cast(S.ShadowBolt) then return "shadow_bolt 24"; end
       end
     end
@@ -510,7 +518,7 @@ local function APL()
       if HR.Cast(S.PurifyingBlast, Settings.Affliction.GCDasOffGCD.Essences) then return "purifying_blast 465"; end
     end
     -- concentrated_flame,if=!dot.concentrated_flame_burn.remains&!action.concentrated_flame.in_flight
-    if S.ConcentratedFlame:IsCastableP() then
+    if S.ConcentratedFlame:IsCastableP() and (Target:DebuffDownP(S.ConcentratedFlameBurn) and not S.ConcentratedFlame:InFlight()) then
       if HR.Cast(S.ConcentratedFlame, Settings.Affliction.GCDasOffGCD.Essences) then return "concentrated_flame 467"; end
     end
     -- drain_soul,interrupt_global=1,chain=1,interrupt=1,cycle_targets=1,if=target.time_to_die<=gcd
@@ -622,16 +630,16 @@ local function APL()
       if HR.Cast(S.MemoryofLucidDreams, Settings.Affliction.GCDasOffGCD.Essences) then return "memory_of_lucid_dreams 771"; end
     end
     -- # Temporary fix to make sure azshara's font doesn't break darkglare usage.
-    -- agony,line_cd=30,if=cooldown.summon_darkglare.remains<=15&equipped.169314
-    if S.Agony:IsCastableP() and (S.SummonDarkglare:CooldownRemainsP() <= 15 and I.AzsharasFontofPower:IsEquipped()) then
+    -- agony,line_cd=30,if=time>30&cooldown.summon_darkglare.remains<=15&equipped.169314
+    if S.Agony:IsCastableP() and (HL.CombatTime() > 30 and S.SummonDarkglare:CooldownRemainsP() <= 15 and I.AzsharasFontofPower:IsEquipped()) then
       if HR.Cast(S.Agony) then return "agony 772"; end
     end
-    -- corruption,line_cd=30,if=cooldown.summon_darkglare.remains<=15&equipped.169314&!talent.absolute_corruption.enabled&(talent.siphon_life.enabled|spell_targets.seed_of_corruption_aoe>1&spell_targets.seed_of_corruption_aoe<=3)
-    if S.Corruption:IsCastableP() and (S.SummonDarkglare:CooldownRemainsP() <= 15 and I.AzsharasFontofPower:IsEquipped() and not S.AbsoluteCorruption:IsAvailable() and (S.SiphonLife:IsAvailable() or EnemiesCount > 1 and EnemiesCount <= 3)) then
+    -- corruption,line_cd=30,if=time>30&cooldown.summon_darkglare.remains<=15&equipped.169314&!talent.absolute_corruption.enabled&(talent.siphon_life.enabled|spell_targets.seed_of_corruption_aoe>1&spell_targets.seed_of_corruption_aoe<=3)
+    if S.Corruption:IsCastableP() and (HL.CombatTime() > 30 and S.SummonDarkglare:CooldownRemainsP() <= 15 and I.AzsharasFontofPower:IsEquipped() and not S.AbsoluteCorruption:IsAvailable() and (S.SiphonLife:IsAvailable() or EnemiesCount > 1 and EnemiesCount <= 3)) then
       if HR.Cast(S.Corruption) then return "corruption 773"; end
     end
-    -- siphon_life,line_cd=30,if=cooldown.summon_darkglare.remains<=15&equipped.169314
-    if S.SiphonLife:IsCastableP() and (S.SummonDarkglare:CooldownRemainsP() <= 15 and I.AzsharasFontofPower:IsEquipped()) then
+    -- siphon_life,line_cd=30,if=time>30&cooldown.summon_darkglare.remains<=15&equipped.169314
+    if S.SiphonLife:IsCastableP() and (HL.CombatTime() > 30 and S.SummonDarkglare:CooldownRemainsP() <= 15 and I.AzsharasFontofPower:IsEquipped()) then
       if HR.Cast(S.SiphonLife) then return "siphon_life 774"; end
     end
     -- unstable_affliction,target_if=!contagion&target.time_to_die<=8

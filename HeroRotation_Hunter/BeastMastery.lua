@@ -67,9 +67,10 @@ Spell.Hunter.BeastMastery = {
   WorldveinResonance                    = MultiSpell(295186, 298628, 299334),
   FocusedAzeriteBeam                    = MultiSpell(295258, 299336, 299338),
   GuardianofAzeroth                     = MultiSpell(295840, 299355, 299358),
-  Lifeblood                             = MultiSpell(295137, 305694),
+  LifebloodBuff                         = MultiSpell(295137, 305694),
   RecklessForceCounter                  = MultiSpell(298409, 302917),
   RecklessForceBuff                     = Spell(302932),
+  ConcentratedFlameBurn                 = Spell(295368),
   -- Trinket Effects
   CyclotronicBlast                      = Spell(167672),
   -- Misc
@@ -82,7 +83,8 @@ if not Item.Hunter then Item.Hunter = {} end
 Item.Hunter.BeastMastery = {
   PotionofUnbridledFury            = Item(169299),
   AshvanesRazorCoral               = Item(169311),
-  PocketsizedComputationDevice     = Item(167555)
+  PocketsizedComputationDevice     = Item(167555),
+  AzsharasFontofPower              = Item(169314)
 };
 local I = Item.Hunter.BeastMastery;
 
@@ -125,6 +127,8 @@ local function GetEnemiesCount(range)
     return 1
   end
 end
+
+S.ConcentratedFlame:RegisterInFlight()
 
 local function num(val)
   if val then return 1 else return 0 end
@@ -194,6 +198,10 @@ local function APL()
       if S.MemoryofLucidDreams:IsCastableP() then
         if HR.Cast(S.MemoryofLucidDreams, Settings.BeastMastery.GCDasOffGCD.Essences) then return "memory_of_lucid_dreams"; end
       end
+      -- use_item,name=azsharas_font_of_power
+      if I.AzsharasFontofPower:IsReady() then
+        if HR.CastSuggested(I.AzsharasFontofPower) then return "azsharas_font_of_power"; end
+      end
       -- use_item,effect_name=cyclotronic_blast,if=!raid_event.invulnerable.exists
       if I.PocketsizedComputationDevice:IsReady() and S.CyclotronicBlast:IsAvailable() then
         if HR.CastSuggested(I.PocketsizedComputationDevice) then return "cyclotronic_blast precombat"; end
@@ -202,12 +210,12 @@ local function APL()
       if S.FocusedAzeriteBeam:IsCastableP() then
         if HR.Cast(S.FocusedAzeriteBeam, Settings.BeastMastery.GCDasOffGCD.Essences) then return "focused_azerite_beam"; end
       end
-      -- aspect_of_the_wild,precast_time=1.1,if=!azerite.primal_instincts.enabled
-      if S.AspectoftheWild:IsCastableP() and (Player:BuffDownP(S.AspectoftheWildBuff) and (not S.PrimalInstincts:AzeriteEnabled())) then
+      -- aspect_of_the_wild,precast_time=1.1,if=!azerite.primal_instincts.enabled&!essence.essence_of_the_focusing_iris.major&(equipped.azsharas_font_of_power|!equipped.pocketsized_computation_device|!cooldown.cyclotronic_blast.duration)
+      if S.AspectoftheWild:IsCastableP() and (not S.PrimalInstincts:AzeriteEnabled() and not S.FocusedAzeriteBeam:IsAvailable() and (I.AzsharasFontofPower:IsEquipped() or not I.PocketsizedComputationDevice:IsEquipped() or S.CyclotronicBlast:CooldownUpP())) then
         if HR.Cast(S.AspectoftheWild, Settings.BeastMastery.GCDasOffGCD.AspectoftheWild) then return "aspect_of_the_wild 8"; end
       end
-      -- bestial_wrath,precast_time=1.5,if=azerite.primal_instincts.enabled&(!essence.essence_of_the_focusing_iris.major)&(!equipped.pocketsized_computation_device|!cooldown.cyclotronic_blast.duration)
-      if S.BestialWrath:IsCastableP() and (Player:BuffDownP(S.BestialWrathBuff) and (S.PrimalInstincts:AzeriteEnabled()) and (not S.FocusedAzeriteBeam:IsAvailable()) and (not I.PocketsizedComputationDevice:IsEquipped() or S.CyclotronicBlast:CooldownUpP())) then
+      -- bestial_wrath,precast_time=1.5,if=azerite.primal_instincts.enabled&!essence.essence_of_the_focusing_iris.major&(equipped.azsharas_font_of_power|!equipped.pocketsized_computation_device|!cooldown.cyclotronic_blast.duration)
+      if S.BestialWrath:IsCastableP() and (S.PrimalInstincts:AzeriteEnabled() and not S.FocusedAzeriteBeam:IsAvailable() and (I.AzsharasFontofPower:IsEquipped() or not I.PocketsizedComputationDevice:IsEquipped() or S.CyclotronicBlast:CooldownUpP())) then
         if HR.Cast(S.BestialWrath, Settings.BeastMastery.GCDasOffGCD.BestialWrath) then return "bestial_wrath 16"; end
       end
     end
@@ -238,11 +246,11 @@ local function APL()
       if HR.CastSuggested(I.PotionofUnbridledFury) then return "battle_potion_of_agility 68"; end
     end
     -- worldvein_resonance,if=buff.lifeblood.stack<4
-    if S.WorldveinResonance:IsCastableP() and (Player:BuffStackP(S.Lifeblood) < 4) then
+    if S.WorldveinResonance:IsCastableP() and (Player:BuffStackP(S.LifebloodBuff) < 4) then
       if HR.Cast(S.WorldveinResonance, Settings.BeastMastery.GCDasOffGCD.Essences) then return "worldvein_resonance"; end
     end
-    -- guardian_of_azeroth
-    if S.GuardianofAzeroth:IsCastableP() then
+    -- guardian_of_azeroth,if=cooldown.aspect_of_the_wild.remains<10|target.time_to_die>cooldown+duration|target.time_to_die<30
+    if S.GuardianofAzeroth:IsCastableP() and (S.AspectoftheWild:CooldownRemainsP() < 10 or Target:TimeToDie() > S.GuardianofAzeroth:Cooldown() + S.GuardianofAzeroth:BaseDuration() or Target:TimeToDie() < 30) then
       if HR.Cast(S.GuardianofAzeroth, Settings.BeastMastery.GCDasOffGCD.Essences) then return "guardian_of_azeroth"; end
     end
     -- ripple_in_space
@@ -341,6 +349,10 @@ local function APL()
     if S.BarbedShot:IsCastableP() and (Pet:BuffP(S.FrenzyBuff) and Pet:BuffRemainsP(S.FrenzyBuff) < Player:GCD() and (S.BarbedShot:FullRechargeTimeP() < Player:GCD() or S.PrimalInstincts:AzeriteEnabled() and S.AspectoftheWild:CooldownRemainsP() < Player:GCD())) then
       if HR.Cast(S.BarbedShot) then return "barbed_shot 164"; end
     end
+    -- concentrated_flame,if=focus+focus.regen*gcd<focus.max&buff.bestial_wrath.down&(!dot.concentrated_flame_burn.remains&!action.concentrated_flame.in_flight)|full_recharge_time<gcd|target.time_to_die<5
+    if S.ConcentratedFlame:IsCastableP() and (Player:Focus() + Player:FocusRegen() * Player:GCD() < Player:FocusMax() and Player:BuffDownP(S.BestialWrathBuff) and (Target:DebuffDownP(S.ConcentratedFlameBurn) and not S.ConcentratedFlame:InFlight()) or S.ConcentratedFlame:FullRechargeTimeP() < Player:GCD() or Target:TimeToDie() < 5) then
+      if HR.Cast(S.ConcentratedFlame, Settings.BeastMastery.GCDasOffGCD.Essences) then return "concentrated_flame 165"; end
+    end
     -- aspect_of_the_wild,if=cooldown.barbed_shot.charges<2|pet.cat.buff.frenzy.stack>2|!azerite.primal_instincts.enabled
     if S.AspectoftheWild:IsCastableP() and (S.BarbedShot:ChargesP() < 2 or Pet:BuffStackP(S.FrenzyBuff) > 2 or not S.PrimalInstincts:AzeriteEnabled()) then
       if HR.Cast(S.AspectoftheWild, Settings.BeastMastery.GCDasOffGCD.AspectoftheWild) then return "aspect_of_the_wild 180"; end
@@ -353,9 +365,13 @@ local function APL()
     if S.AMurderofCrows:IsCastableP() and (bool(S.BestialWrath:CooldownRemainsP())) then
       if HR.Cast(S.AMurderofCrows, Settings.BeastMastery.GCDasOffGCD.AMurderofCrows) then return "a_murder_of_crows 183"; end
     end
-    -- focused_azerite_beam,if=buff.bestial_wrath.down
-    if S.FocusedAzeriteBeam:IsCastableP() and (Player:BuffDownP(S.BestialWrathBuff)) then
+    -- focused_azerite_beam,if=buff.bestial_wrath.down|target.time_to_die<5
+    if S.FocusedAzeriteBeam:IsCastableP() and (Player:BuffDownP(S.BestialWrathBuff) or Target:TimeToDie() < 5) then
       if HR.Cast(S.FocusedAzeriteBeam, Settings.BeastMastery.GCDasOffGCD.Essences) then return "focused_azerite_beam 184"; end
+    end
+    -- the_unbound_force,if=buff.reckless_force.up|buff.reckless_force_counter.stack<10|target.time_to_die<5
+    if S.TheUnboundForce:IsCastableP() and (Player:BuffP(S.RecklessForceBuff) or Player:BuffStackP(S.RecklessForceCounter) < 10 or Target:TimeToDie() < 5) then
+      if HR.Cast(S.TheUnboundForce, Settings.BeastMastery.GCDasOffGCD.Essences) then return "the_unbound_force 185"; end
     end
     -- bestial_wrath
     if S.BestialWrath:IsCastableP() then
@@ -377,21 +393,13 @@ local function APL()
     if S.BarbedShot:IsCastableP() and (Pet:BuffDownP(S.FrenzyBuff) and (S.BarbedShot:ChargesFractionalP() > 1.8 or Player:BuffP(S.BestialWrathBuff)) or S.AspectoftheWild:CooldownRemainsP() < S.FrenzyBuff:BaseDuration() - GCDMax and S.PrimalInstincts:AzeriteEnabled() or S.DanceofDeath:AzeriteRank() > 1 and Player:BuffDownP(S.DanceofDeathBuff) and Player:CritChancePct() > 40 or Target:TimeToDie() < 9) then
       if HR.Cast(S.BarbedShot) then return "barbed_shot 200"; end
     end
-    -- purifying_blast
-    if S.PurifyingBlast:IsCastableP() then
+    -- purifying_blast,if=buff.bestial_wrath.down|target.time_to_die<8
+    if S.PurifyingBlast:IsCastableP() and (Player:BuffDownP(S.BestialWrathBuff) or Target:TimeToDie() < 8) then
       if HR.Cast(S.PurifyingBlast, Settings.BeastMastery.GCDasOffGCD.Essences) then return "focused_azerite_beam"; end
-    end
-    -- concentrated_flame
-    if S.ConcentratedFlame:IsCastableP() then
-      if HR.Cast(S.ConcentratedFlame, Settings.BeastMastery.GCDasOffGCD.Essences) then return "focused_azerite_beam"; end
     end
     -- blood_of_the_enemy
     if S.BloodofTheEnemy:IsCastableP() then
       if HR.Cast(S.BloodofTheEnemy, Settings.BeastMastery.GCDasOffGCD.Essences) then return "focused_azerite_beam"; end
-    end
-    -- the_unbound_force,if=buff.reckless_force.up|buff.reckless_force_counter.stack<10
-    if S.TheUnboundForce:IsCastableP() and (Player:BuffP(S.RecklessForceBuff) or Player:BuffStackP(S.RecklessForceCounter) < 10) then
-      if HR.Cast(S.TheUnboundForce, Settings.BeastMastery.GCDasOffGCD.Essences) then return "focused_azerite_beam"; end
     end
     -- barrage
     if S.Barrage:IsReadyP() then
@@ -429,8 +437,8 @@ local function APL()
     Everyone.Interrupt(40, S.CounterShot, Settings.Commons.OffGCDasOffGCD.CounterShot, StunInterrupts);
     -- auto_shot
     -- use_items
-    -- use_item,effect_name=cyclotronic_blast
-    if I.PocketsizedComputationDevice:IsReady() and S.CyclotronicBlast:IsAvailable() then
+    -- use_item,effect_name=cyclotronic_blast,if=!buff.bestial_wrath.up
+    if I.PocketsizedComputationDevice:IsReady() and S.CyclotronicBlast:IsAvailable()  and (Player:BuffDownP(S.BestialWrathBuff)) then
       if HR.CastSuggested(I.PocketsizedComputationDevice) then return "cyclotronic_blast"; end
     end
     -- use_item,name=ashvanes_razor_coral,if=buff.aspect_of_the_wild.remains>15|debuff.razor_coral_debuff.down|target.time_to_die<20

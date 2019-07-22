@@ -49,6 +49,7 @@ Spell.Paladin.Retribution = {
   CrusaderStrike                        = Spell(35395),
   Rebuke                                = Spell(96231),
   HammerofJustice                       = Spell(853),
+  CyclotronicBlast                      = Spell(167672),
   BloodofTheEnemy                       = MultiSpell(297108, 298273, 298277),
   MemoryofLucidDreams                   = MultiSpell(298357, 299372, 299374),
   PurifyingBlast                        = MultiSpell(295337, 299345, 299347),
@@ -59,6 +60,7 @@ Spell.Paladin.Retribution = {
   FocusedAzeriteBeam                    = MultiSpell(295258, 299336, 299338),
   GuardianofAzeroth                     = MultiSpell(295840, 299355, 299358),
   RecklessForceBuff                     = Spell(302932),
+  ConcentratedFlameBurn                 = Spell(295368),
   SeethingRageBuff                      = Spell(297126),
   RazorCoralDebuff                      = Spell(303568)
 };
@@ -69,7 +71,8 @@ if not Item.Paladin then Item.Paladin = {} end
 Item.Paladin.Retribution = {
   PotionofFocusedResolve           = Item(168506),
   AshvanesRazorCoral               = Item(169311),
-  AzsharasFontofPower              = Item(169314)
+  AzsharasFontofPower              = Item(169314),
+  PocketsizedComputationDevice     = Item(167555)
 };
 local I = Item.Paladin.Retribution;
 
@@ -151,8 +154,8 @@ local function APL()
     if S.ShieldofVengeance:IsCastableP() and Settings.Retribution.ShieldofVengeance and (Player:BuffDownP(S.SeethingRageBuff) and Player:BuffDownP(S.MemoryofLucidDreams)) then
       if HR.CastLeft(S.ShieldofVengeance) then return "shield_of_vengeance 30"; end
     end
-    -- use_item,name=ashvanes_razor_coral,if=debuff.razor_coral_debuff.down|buff.avenging_wrath.remains>=20&(cooldown.guardian_of_azeroth.remains>90|target.time_to_die<30)|buff.crusade.up&buff.crusade.stack=10&buff.crusade.remains>15&(cooldown.guardian_of_azeroth.remains>90||target.time_to_die<30)
-    if I.AshvanesRazorCoral:IsReady() and (Target:DebuffDownP(S.RazorCoralDebuff) or Player:BuffRemainsP(S.AvengingWrath) >= 20 and ((not S.GuardianofAzeroth:IsAvailable() or S.GuardianofAzeroth:CooldownRemainsP() > 90) or Target:TimeToDie() < 30) or Player:BuffP(S.CrusadeBuff) and Player:BuffStackP(S.CrusadeBuff) == 10 and Player:BuffRemainsP(S.CrusadeBuff) > 15 and ((not S.GuardianofAzeroth:IsAvailable() or S.GuardianofAzeroth:CooldownRemainsP() > 90) or Target:TimeToDie() < 30)) then
+    -- use_item,name=ashvanes_razor_coral,if=debuff.razor_coral_debuff.down|(buff.avenging_wrath.remains>=20|buff.crusade.stack=10&buff.crusade.remains>15)&(cooldown.guardian_of_azeroth.remains>90|target.time_to_die<30|!essence.condensed_lifeforce.major)
+    if I.AshvanesRazorCoral:IsReady() and (Target:DebuffDownP(S.RazorCoralDebuff) or (Player:BuffRemainsP(S.AvengingWrath) >= 20 or Player:BuffStackP(S.CrusadeBuff) == 10 and Player:BuffRemainsP(S.CrusadeBuff) > 15) and (S.GuardianofAzeroth:CooldownRemainsP() > 90 or Target:TimeToDie() < 30 or not S.GuardianofAzeroth:IsAvailable())) then
       if HR.CastSuggested(I.AshvanesRazorCoral) then reutrn "ashvanes_razor_coral"; end
     end
     -- the_unbound_force,if=time<=2|buff.reckless_force.up
@@ -182,6 +185,10 @@ local function APL()
     -- purifying_blast,if=(!raid_event.adds.exists|raid_event.adds.in>30|spell_targets.divine_storm>=2)
     if S.PurifyingBlast:IsCastableP() and (Cache.EnemiesCount[8] >= 2) then
       if HR.Cast(S.PurifyingBlast, Settings.Retribution.GCDasOffGCD.Essences) then return "purifying_blast"; end
+    end
+    -- use_item,effect_name=cyclotronic_blast,if=(buff.avenging_wrath.down|buff.crusade.down)&(cooldown.blade_of_justice.remains>gcd*3&cooldown.judgment.remains>gcd*3)
+    if I.PocketsizedComputationDevice:IsReady() and S.CyclotronicBlast:IsAvailable() and ((Player:BuffDownP(S.AvengingWrathBuff) or Player:BuffDownP(S.CrusadeBuff)) and (S.BladeofJustice:CooldownRemainsP() > PlayerGCD * 3 and S.Judgment:CooldownRemainsP() > PlayerGCD * 3)) then
+      if HR.CastSuggested(I.PocketsizedComputationDevice) then return "cyclotronic_blast"; end
     end
     -- avenging_wrath,if=(!talent.inquisition.enabled|buff.inquisition.up)&holy_power>=3
     if S.AvengingWrath:IsCastableP() and ((not S.Inquisition:IsAvailable() or Player:BuffP(S.InquisitionBuff)) and Player:HolyPower() >= 3) then

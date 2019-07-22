@@ -76,6 +76,7 @@ Spell.Druid.Feral = {
   FocusedAzeriteBeam                    = MultiSpell(295258, 299336, 299338),
   GuardianofAzeroth                     = MultiSpell(295840, 299355, 299358),
   RecklessForceBuff                     = Spell(302932),
+  ConcentratedFlameBurn                 = Spell(295368),
   Thorns                                = Spell(236696),
   HeartEssence                          = Spell(298554),
   -- Icon for pulling enery
@@ -206,7 +207,7 @@ local function APL()
         if HR.Cast(S.Prowl, Settings.Feral.OffGCDasOffGCD.Prowl) then return "prowl 19"; end
       end
       -- snapshot_stats
-      -- potion
+      -- potion,dynamic_prepot=1
       if I.PotionofFocusedResolve:IsReady() and Settings.Commons.UsePotions then
         if HR.CastSuggested(I.PotionofFocusedResolve) then return "battle_potion_of_agility 24"; end
       end

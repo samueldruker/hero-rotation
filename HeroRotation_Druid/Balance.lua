@@ -77,6 +77,7 @@ Spell.Druid.Balance = {
   FocusedAzeriteBeam                    = MultiSpell(295258, 299336, 299338),
   GuardianofAzeroth                     = MultiSpell(295840, 299355, 299358),
   RecklessForceBuff                     = Spell(302932),
+  ConcentratedFlameBurn                 = Spell(295368),
   Thorns                                = Spell(236696)
 };
 local S = Spell.Druid.Balance;
@@ -223,7 +224,7 @@ local function EvaluateCycleShiverVenomRelic104(TargetUnit)
 end
 
 local function EvaluateCycleMemoryofLucidDreams135(TargetUnit)
-  return (TargetUnit:DebuffRemainsP(S.SunfireDebuff) > 10 and TargetUnit:DebuffRemainsP(S.MoonfireDebuff) > 10 and (not S.StellarFlare:IsAvailable() or TargetUnit:DebuffRemainsP(S.StellarFlareDebuff) > 10)) and (Player:BuffDownP(CaInc()) and (FutureAstralPower() < 25 or S.CaInc:CooldownRemainsP() > 30))
+  return (TargetUnit:DebuffRemainsP(S.SunfireDebuff) > 10 and TargetUnit:DebuffRemainsP(S.MoonfireDebuff) > 10 and (not S.StellarFlare:IsAvailable() or TargetUnit:DebuffRemainsP(S.StellarFlareDebuff) > 10)) and (Player:BuffDownP(CaInc()) and (FutureAstralPower() < 25 or CaInc():CooldownRemainsP() > 30))
 end
 
 local function EvaluateCycleTheUnboundForce160(TargetUnit)
@@ -292,18 +293,26 @@ local function APL()
       if HR.Cast(S.MoonkinForm, Settings.Balance.GCDasOffGCD.MoonkinForm) then return "moonkin_form 39"; end
     end
     -- snapshot_stats
-    -- potion
+    -- use_item,name=azsharas_font_of_power
+    -- Main icon instead of CastSuggested, as nothing would be in main icon otherwise
+    if I.AzsharasFontofPower:IsReady() then
+      if HR.Cast(S.AzsharasFontofPower) then return "azsharas_font_of_power precombat"; end
+    end
+    -- potion,dynamic_prepot=1
     if I.PotionofUnbridledFury:IsReady() and Settings.Commons.UsePotions then
       if HR.CastSuggested(I.PotionofUnbridledFury) then return "battle_potion_of_intellect 42"; end
     end
-    -- use_item,name=azsharas_font_of_power
-    -- Main icon instead of CastSuggested, as nothing would be in main icon otherwise
-    if I.AzsharasFontofPower:IsCastableP() then
-      if HR.Cast(S.AzsharasFontofPower) then return "azsharas_font_of_power precombat"; end
+    -- solar_wrath
+    if S.SolarWrath:IsCastableP() and (not Player:PrevGCDP(1, S.SolarWrath) and not Player:PrevGCDP(2, S.SolarWrath)) then
+      if HR.Cast(S.SolarWrath) then return "solar_wrath 43"; end
     end
-    -- solar_wrath,if=!equipped.azsharas_font_of_power|!bfa.font_of_power_precombat_channel|bfa.font_of_power_precombat_channel>=7.0
-    if S.SolarWrath:IsCastableP() and (not I.AzsharasFontofPower:IsEquipped() or Player:BuffP(S.AzsharasFontofPowerBuff)) then
+    -- solar_wrath
+    if S.SolarWrath:IsCastableP() and (Player:PrevGCDP(1, S.SolarWrath) and not Player:PrevGCDP(2, S.SolarWrath)) then
       if HR.Cast(S.SolarWrath) then return "solar_wrath 44"; end
+    end
+    -- starsurge
+    if S.Starsurge:IsReadyP() then
+      if HR.Cast(S.Starsurge) then return "starsurge 45"; end
     end
   end
   -- Moonkin Form OOC, if setting is true
@@ -328,10 +337,6 @@ local function APL()
     if I.PotionofUnbridledFury:IsReady() and Settings.Commons.UsePotions and (Player:BuffRemainsP(S.CelestialAlignment) > 13 or Player:BuffRemainsP(S.Incarnation) > 16.5) then
       if HR.CastSuggested(I.PotionofUnbridledFury) then return "battle_potion_of_intellect 57"; end
     end
-    -- Not including the below 3 lines, as it appears to be a SimC-specific hack that shouldn't be needed in HR
-    -- # Precombat Hack
-    -- solar_wrath,precombat=1,if=!equipped.azsharas_font_of_power|!bfa.font_of_power_precombat_channel|bfa.font_of_power_precombat_channel>=5.5
-    -- starsurge,precombat=1,if=talent.natures_balance.enabled
     -- berserking,if=buff.ca_inc.up
     if S.Berserking:IsCastableP() and HR.CDsON() and (Player:BuffP(CaInc())) then
       if HR.Cast(S.Berserking, Settings.Commons.OffGCDasOffGCD.Racials) then return "berserking 65"; end
