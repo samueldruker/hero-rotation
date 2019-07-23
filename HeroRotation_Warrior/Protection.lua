@@ -53,7 +53,7 @@ Spell.Warrior.Protection = {
   Pummel                                = Spell(6552),
   IntimidatingShout                     = Spell(5246),
   RazorCoralDebuff                      = Spell(303568),
-  BloodofTheEnemy                       = MultiSpell(297108, 298273, 298277),
+  BloodoftheEnemy                       = MultiSpell(297108, 298273, 298277),
   MemoryofLucidDreams                   = MultiSpell(298357, 299372, 299374),
   PurifyingBlast                        = MultiSpell(295337, 299345, 299347),
   RippleInSpace                         = MultiSpell(302731, 302982, 302983),
@@ -262,11 +262,11 @@ local function APL()
       if HR.Cast(S.ShieldSlam) then return "shield_slam 70"; end
     end
     -- use_item,name=ashvanes_razor_coral,target_if=debuff.razor_coral_debuff.stack=0
-    if I.AshvanesRazorCoral:IsCastableP() and (Target:DebuffStackP(S.RazorCoralDebuff) == 0) then
+    if I.AshvanesRazorCoral:IsReady() and (Target:DebuffStackP(S.RazorCoralDebuff) == 0) then
       if HR.CastSuggested(I.AshvanesRazorCoral) then return "ashvanes_razor_coral 71"; end
     end
     -- use_item,name=ashvanes_razor_coral,if=debuff.razor_coral_debuff.stack>7&(cooldown.avatar.remains<5|buff.avatar.up)
-    if I.AshvanesRazorCoral:IsCastableP() and (Target:DebuffStackP(S.RazorCoralDebuff) > 7 and (S.Avatar:CooldownRemainsP() < 5 or Player:BuffP(S.AvatarBuff))) then
+    if I.AshvanesRazorCoral:IsReady() and (Target:DebuffStackP(S.RazorCoralDebuff) > 7 and (S.Avatar:CooldownRemainsP() < 5 or Player:BuffP(S.AvatarBuff))) then
       if HR.CastSuggested(I.AshvanesRazorCoral) then return "ashvanes_razor_coral 72"; end
     end
     -- dragon_roar

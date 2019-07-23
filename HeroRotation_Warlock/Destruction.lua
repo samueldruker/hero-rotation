@@ -55,7 +55,7 @@ Spell.Warlock.Destruction = {
   Eradication                           = Spell(196412),
   EradicationDebuff                     = Spell(196414),
   ShiverVenomDebuff                     = Spell(301624),
-  BloodofTheEnemy                       = MultiSpell(297108, 298273, 298277),
+  BloodoftheEnemy                       = MultiSpell(297108, 298273, 298277),
   MemoryofLucidDreams                   = MultiSpell(298357, 299372, 299374),
   PurifyingBlast                        = MultiSpell(295337, 299345, 299347),
   RippleInSpace                         = MultiSpell(302731, 302982, 302983),
@@ -195,9 +195,6 @@ local function APL()
   local Precombat, Aoe, Cds, Havoc
   EnemiesCount = GetEnemiesCount(10)
   HL.GetEnemies(40) -- To populate Cache.Enemies[40] for CastCycles
-  if Everyone.TargetIsValid() then
-    print(EnemiesCount)
-  end
   Precombat = function()
     -- flask
     -- food
@@ -354,8 +351,8 @@ local function APL()
       if HR.Cast(S.MemoryofLucidDreams, Settings.Destruction.GCDasOffGCD.Essences) then return "memory_of_lucid_dreams 225"; end
     end
     -- blood_of_the_enemy
-    if S.BloodofTheEnemy:IsCastableP() then
-      if HR.Cast(S.BloodofTheEnemy, Settings.Destruction.GCDasOffGCD.Essences) then return "blood_of_the_enemy 227"; end
+    if S.BloodoftheEnemy:IsCastableP() then
+      if HR.Cast(S.BloodoftheEnemy, Settings.Destruction.GCDasOffGCD.Essences) then return "blood_of_the_enemy 227"; end
     end
     -- worldvein_resonance
     if S.WorldveinResonance:IsCastableP() then
