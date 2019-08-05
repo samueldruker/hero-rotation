@@ -216,7 +216,7 @@ local function APL()
       end
       -- snapshot_stats
       -- use_item,name=azsharas_font_of_power
-      if I.AzsharasFontofPower:IsEquipped() and I.AzsharasFontofPower:IsReady() then
+      if I.AzsharasFontofPower:IsEquipped() and I.AzsharasFontofPower:IsReady() and HR.CDsON() then
         if HR.CastSuggested(I.AzsharasFontofPower) then return "azsharas_font_of_power 9"; end
       end
       -- mirror_image
@@ -342,8 +342,8 @@ local function APL()
     if I.IgnitionMagesFuse:IsEquipped() and I.IgnitionMagesFuse:IsReady() then
       if HR.CastSuggested(I.IgnitionMagesFuse) then return "ignition_mages_fuse combustion"; end
     end
-    -- use_item,name=hyperthread_wristwraps,if=buff.combustion.up&(action.fire_blast.full_recharge_time>=10+gcd.remains|action.fire_blast.charges=0&action.fire_blast.recharge_time>gcd.remains)
-    if I.HyperthreadWristwraps:IsEquipped() and I.HyperthreadWristwraps:IsReady() and (Player:BuffP(S.CombustionBuff) and (S.FireBlast:FullRechargeTimeP() >= 10 + Player:GCDRemains() or S.FireBlast:Charges() == 0 and S.FireBlast:RechargeP() > Player:GCDRemains())) then
+    -- use_item,name=hyperthread_wristwraps,if=buff.combustion.up&action.fire_blast.charges=0&action.fire_blast.recharge_time>gcd.remains
+    if I.HyperthreadWristwraps:IsEquipped() and I.HyperthreadWristwraps:IsReady() and (Player:BuffP(S.CombustionBuff) and S.FireBlast:Charges() == 0 and S.FireBlast:RechargeP() > Player:GCDRemains()) then
       if HR.CastSuggested(I.HyperthreadWristwraps) then return "hyperthread_wristwraps combustion"; end
     end
     -- use_item,use_off_gcd=1,name=azurethos_singed_plumage,if=buff.combustion.up|action.meteor.in_flight&action.meteor.in_flight_remains<=0.5
@@ -583,7 +583,7 @@ local function APL()
       if HR.Cast(S.DragonsBreath) then return "dragons_breath 766"; end
     end
     -- call_action_list,name=items_low_priority
-    if (true) then
+    if (HR.CDsON()) then
       local ShouldReturn = ItemsLowPriority(); if ShouldReturn then return ShouldReturn; end
     end
     -- scorch,if=target.health.pct<=30&talent.searing_touch.enabled
@@ -607,7 +607,7 @@ local function APL()
     -- counterspell
     Everyone.Interrupt(40, S.Counterspell, Settings.Commons.OffGCDasOffGCD.Counterspell, false);
     -- call_action_list,name=items_high_priority
-    if (true) then
+    if (HR.CDsON()) then
       local ShouldReturn = ItemsHighPriority(); if ShouldReturn then return ShouldReturn; end
     end
     -- mirror_image,if=buff.combustion.down

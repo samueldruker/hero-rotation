@@ -338,7 +338,7 @@ local function APL()
       end
       -- use_item,name=azsharas_font_of_power
       -- Using main icon, since only Haunt will be suggested precombat if equipped and that's optional
-      if I.AzsharasFontofPower:IsEquipped() and I.AzsharasFontofPower:IsReady() then
+      if I.AzsharasFontofPower:IsEquipped() and I.AzsharasFontofPower:IsReady() and HR.CDsON() then
         if HR.Cast(I.AzsharasFontofPower) then return "azsharas_font_of_power 15"; end
       end
       -- seed_of_corruption,if=spell_targets.seed_of_corruption_aoe>=3&!equipped.169314
@@ -377,8 +377,8 @@ local function APL()
     if S.MemoryofLucidDreams:IsCastableP() and (HL.CombatTime() > 30) then
       if HR.Cast(S.MemoryofLucidDreams, Settings.Affliction.GCDasOffGCD.Essences) then return "memory_of_lucid_dreams 59"; end
     end
-    -- dark_soul,if=target.time_to_die<20+gcd|spell_targets.seed_of_corruption_aoe>1+raid_event.invulnerable.up|talent.sow_the_seeds.enabled&cooldown.summon_darkglare.remains>=cooldown.summon_darkglare.duration-10
-    if S.DarkSoul:IsReadyP() and (Target:TimeToDie() < 20 + Player:GCD() or EnemiesCount > 1 or S.SowtheSeeds:IsAvailable() and S.SummonDarkglare:CooldownRemainsP() >= S.SummonDarkglare:BaseDuration() - 10) then
+    -- dark_soul,if=target.time_to_die<20+gcd|talent.sow_the_seeds.enabled&cooldown.summon_darkglare.remains>=cooldown.summon_darkglare.duration-10
+    if S.DarkSoul:IsReadyP() and (Target:TimeToDie() < 20 + Player:GCD() or S.SowtheSeeds:IsAvailable() and S.SummonDarkglare:CooldownRemainsP() >= S.SummonDarkglare:BaseDuration() - 10) then
       if HR.Cast(S.DarkSoul) then return "dark_soul 60"; end
     end
     -- blood_of_the_enemy,if=pet.darkglare.remains|(!cooldown.deathbolt.remains|!talent.deathbolt.enabled)&cooldown.summon_darkglare.remains>=80&essence.blood_of_the_enemy.rank>1
@@ -596,7 +596,7 @@ local function APL()
       VarMaintainSe = num(EnemiesCount <= 1 + num(S.WritheInAgony:IsAvailable()) + num(S.AbsoluteCorruption:IsAvailable()) * 2 + num((S.WritheInAgony:IsAvailable() and S.SowtheSeeds:IsAvailable() and EnemiesCount > 2)) + num((S.SiphonLife:IsAvailable() and not S.CreepingDeath:IsAvailable() and not S.DrainSoul:IsAvailable())))
     end
     -- call_action_list,name=cooldowns
-    if (true) then
+    if (HR.CDsON()) then
       local ShouldReturn = Cooldowns(); if ShouldReturn then return ShouldReturn; end
     end
     -- drain_soul,interrupt_global=1,chain=1,cycle_targets=1,if=target.time_to_die<=gcd&soul_shard<5
@@ -607,8 +607,8 @@ local function APL()
     if S.Haunt:IsCastableP() and (EnemiesCount <= 2) then
       if HR.Cast(S.Haunt) then return "haunt 714"; end
     end
-    -- summon_darkglare,if=dot.agony.ticking&dot.corruption.ticking&(buff.active_uas.stack=5|soul_shard=0)&(!talent.phantom_singularity.enabled|dot.phantom_singularity.remains)&(!talent.deathbolt.enabled|cooldown.deathbolt.remains<=gcd|!cooldown.deathbolt.remains|spell_targets.seed_of_corruption_aoe>1+raid_event.invulnerable.up)
-    if S.SummonDarkglare:IsCastableP() and HR.CDsON() and (Target:DebuffP(S.AgonyDebuff) and Target:DebuffP(S.CorruptionDebuff) and (ActiveUAs() == 5 or Player:SoulShardsP() == 0) and (not S.PhantomSingularity:IsAvailable() or Target:DebuffP(S.PhantomSingularityDebuff)) and (not S.Deathbolt:IsAvailable() or S.Deathbolt:CooldownRemainsP() <= Player:GCD() or S.Deathbolt:CooldownUpP() or EnemiesCount > 1)) then
+    -- summon_darkglare,if=summon_darkglare,if=dot.agony.ticking&dot.corruption.ticking&(buff.active_uas.stack=5|soul_shard=0|dot.phantom_singularity.remains&dot.phantom_singularity.remains<=gcd)&(!talent.phantom_singularity.enabled|dot.phantom_singularity.remains)&(!talent.deathbolt.enabled|cooldown.deathbolt.remains<=gcd|!cooldown.deathbolt.remains|spell_targets.seed_of_corruption_aoe>1+raid_event.invulnerable.up)
+    if S.SummonDarkglare:IsCastableP() and HR.CDsON() and (Target:DebuffP(S.AgonyDebuff) and Target:DebuffP(S.CorruptionDebuff) and (ActiveUAs() == 5 or Player:SoulShardsP() == 0 or Target:DebuffP(S.PhantomSingularityDebuff) and Target:DebuffRemainsP(S.PhantomSingularityDebuff) <= Player:GCD()) and (not S.PhantomSingularity:IsAvailable() or Target:DebuffP(S.PhantomSingularityDebuff)) and (not S.Deathbolt:IsAvailable() or S.Deathbolt:CooldownRemainsP() <= Player:GCD() or S.Deathbolt:CooldownUpP() or EnemiesCount > 1)) then
       if HR.Cast(S.SummonDarkglare, Settings.Affliction.GCDasOffGCD.SummonDarkglare) then return "summon_darkglare 716"; end
     end
     -- deathbolt,if=cooldown.summon_darkglare.remains&spell_targets.seed_of_corruption_aoe=1+raid_event.invulnerable.up&(!essence.vision_of_perfection.minor&!azerite.dreadful_calling.rank|cooldown.summon_darkglare.remains>30)
@@ -673,7 +673,7 @@ local function APL()
       if HR.CastTargetIf(S.VileTaint, 40, "max", EvaluateTargetIfFilterVileTaint856, EvaluateTargetIfVileTaint859) then return "vile_taint 861" end
     end
     -- use_item,name=azsharas_font_of_power,if=time<=3
-    if I.AzsharasFontofPower:IsEquipped() and I.AzsharasFontofPower:IsReady() and (HL.CombatTime() <= 3) then
+    if I.AzsharasFontofPower:IsEquipped() and I.AzsharasFontofPower:IsReady() and HR.CDsON() and (HL.CombatTime() <= 3) then
       if HR.CastSuggested(I.AzsharasFontofPower) then return "azsharas_font_of_power 879"; end
     end
     -- phantom_singularity,if=time<=35

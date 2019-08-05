@@ -181,7 +181,7 @@ end
 local function APL()
   local Precombat, Cds, Cleave, CritCds, Single
   local InsanityDrain = InsanityDrain()
-  EnemiesCount = GetEnemiesCount(8)
+  EnemiesCount = GetEnemiesCount(10)
   HL.GetEnemies(40) -- For CastCycle calls
   Precombat = function()
     if Everyone.TargetIsValid() then
@@ -210,7 +210,7 @@ local function APL()
         if HR.Cast(S.Shadowform, Settings.Shadow.GCDasOffGCD.Shadowform) then return "shadowform 44"; end
       end
       -- use_item,name=azsharas_font_of_power
-      if I.AzsharasFontofPower:IsEquipped() and I.AzsharasFontofPower:IsReady() then
+      if I.AzsharasFontofPower:IsEquipped() and I.AzsharasFontofPower:IsReady() and HR.CDsON() then
         if HR.CastSuggested(I.AzsharasFontofPower) then return "azsharas_font_of_power 50"; end
       end
       -- mind_blast,if=spell_targets.mind_sear<2|azerite.thought_harvester.rank=0
@@ -236,8 +236,8 @@ local function APL()
     if S.BloodoftheEnemy:IsCastableP() then
       if HR.Cast(S.BloodoftheEnemy, Settings.Shadow.GCDasOffGCD.Essences) then return "blood_of_the_enemy cds"; end
     end
-    -- guardian_of_azeroth
-    if S.GuardianofAzeroth:IsCastableP() then
+    -- guardian_of_azeroth,if=buff.voidform.stack>15
+    if S.GuardianofAzeroth:IsCastableP() and (Player:BuffStackP(S.VoidformBuff) > 15) then
       if HR.Cast(S.GuardianofAzeroth, Settings.Shadow.GCDasOffGCD.Essences) then return "guardian_of_azeroth cds"; end
     end
     -- focused_azerite_beam,if=spell_targets.mind_sear>=2|raid_event.adds.in>60
@@ -265,7 +265,7 @@ local function APL()
       if HR.Cast(S.WorldveinResonance, Settings.Shadow.GCDasOffGCD.Essences) then return "worldvein_resonance cds"; end
     end
     -- call_action_list,name=crit_cds,if=(buff.voidform.up&buff.chorus_of_insanity.stack>20)|azerite.chorus_of_insanity.rank=0
-    if ((Player:BuffP(S.VoidformBuff) and Player:BuffStackP(S.ChorusofInsanity) > 20) or not S.ChorusofInsanity:AzeriteEnabled()) then
+    if ((Player:BuffP(S.VoidformBuff) and Player:BuffStackP(S.ChorusofInsanity) > 20) or not S.ChorusofInsanity:AzeriteEnabled() and HR.CDsON()) then
       local ShouldReturn = CritCds(); if ShouldReturn then return ShouldReturn; end
     end
     -- use_items
@@ -292,7 +292,9 @@ local function APL()
       if HR.Cast(S.VoidBolt) then return "void_bolt 78"; end
     end
     -- call_action_list,name=cds
-    local ShouldReturn = Cds(); if ShouldReturn then return ShouldReturn; end
+    if (HR.CDsON()) then
+      local ShouldReturn = Cds(); if ShouldReturn then return ShouldReturn; end
+    end
     -- shadow_word_death,target_if=target.time_to_die<3|buff.voidform.down
     if S.ShadowWordDeath:IsReadyP() then
       if HR.CastCycle(S.ShadowWordDeath, 40, EvaluateCycleShadowWordDeath84) then return "shadow_word_death 88" end
@@ -374,7 +376,9 @@ local function APL()
       if HR.Cast(S.VoidBolt) then return "void_bolt 182"; end
     end
     -- call_action_list,name=cds
-    local ShouldReturn = Cds(); if ShouldReturn then return ShouldReturn; end
+    if (HR.CDsON()) then
+      local ShouldReturn = Cds(); if ShouldReturn then return ShouldReturn; end
+    end
     -- mind_sear,if=buff.harvested_thoughts.up&cooldown.void_bolt.remains>=1.5&azerite.searing_dialogue.rank>=1
     if S.MindSear:IsCastableP() and (Player:BuffP(S.HarvestedThoughtsBuff) and S.VoidBolt:CooldownRemainsP() >= 1.5 and S.SearingDialogue:AzeriteRank() >= 1) then
       if HR.Cast(S.MindSear) then return "mind_sear 184"; end
@@ -465,8 +469,11 @@ local function APL()
 end
 
 local function Init ()
-  HL.RegisterNucleusAbility(228260, 10, 6)               -- Void Eruption
+  HL.RegisterNucleusAbility(228260, 10, 6)               -- Void Eruption 1st Bolt
+  HL.RegisterNucleusAbility(228261, 10, 6)               -- Void Eruption 2nd Bolt
   HL.RegisterNucleusAbility(48045, 10, 6)                -- Mind Sear
+  HL.RegisterNucleusAbility(49821, 10, 6)                -- Mind Sear 2nd ID
+  HL.RegisterNucleusAbility(263346, 10, 6)               -- Dark Void
   HL.RegisterNucleusAbility(205385, 8, 6)                -- Shadow Crash
 end
 

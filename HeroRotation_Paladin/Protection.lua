@@ -3,16 +3,17 @@
 -- Addon
 local addonName, addonTable = ...
 -- HeroLib
-local HL     = HeroLib
-local Cache  = HeroCache
-local Unit   = HL.Unit
-local Player = Unit.Player
-local Target = Unit.Target
-local Pet    = Unit.Pet
-local Spell  = HL.Spell
-local Item   = HL.Item
+local HL         = HeroLib
+local Cache      = HeroCache
+local Unit       = HL.Unit
+local Player     = Unit.Player
+local Target     = Unit.Target
+local Pet        = Unit.Pet
+local Spell      = HL.Spell
+local MultiSpell = HL.MultiSpell
+local Item       = HL.Item
 -- HeroRotation
-local HR     = HeroRotation
+local HR         = HeroRotation
 
 --- ============================ CONTENT ===========================
 --- ======= APL LOCALS =======
@@ -31,7 +32,7 @@ Spell.Paladin.Protection = {
   AvengingWrath                         = Spell(31884),
   SeraphimBuff                          = Spell(152262),
   BastionofLight                        = Spell(204035),
-  Judgment                              = Spell(20271),
+  Judgment                              = Spell(275779),
   CrusadersJudgment                     = Spell(204023),
   AvengersShield                        = Spell(31935),
   AvengersValorBuff                     = Spell(197561),
@@ -185,7 +186,7 @@ local function APL()
     Everyone.Interrupt(5, S.Rebuke, Settings.Commons.OffGCDasOffGCD.Rebuke, StunInterrupts);
     -- auto_attack
     -- call_action_list,name=cooldowns
-    if (true) then
+    if (HR.CDsON()) then
       local ShouldReturn = Cooldowns(); if ShouldReturn then return ShouldReturn; end
     end
     -- worldvein_resonance,if=buff.lifeblood.stack<3

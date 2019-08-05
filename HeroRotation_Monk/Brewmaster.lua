@@ -3,16 +3,17 @@
 -- Addon
 local addonName, addonTable = ...
 -- HeroLib
-local HL     = HeroLib
-local Cache  = HeroCache
-local Unit   = HL.Unit
+local HL = HeroLib
+local Cache = HeroCache
+local Unit = HL.Unit
 local Player = Unit.Player
 local Target = Unit.Target
-local Pet    = Unit.Pet
-local Spell  = HL.Spell
-local Item   = HL.Item
+local Pet = Unit.Pet
+local Spell = HL.Spell
+local MultiSpell = HL.MultiSpell
+local Item = HL.Item
 -- HeroRotation
-local HR   = HeroRotation
+local HR = HeroRotation
 
 --- ============================ CONTENT ===========================
 --- ======= APL LOCALS =======
@@ -204,7 +205,7 @@ local function APL()
       ShouldReturn = Defensives(); if ShouldReturn then return ShouldReturn; end
     end
     -- Invocation of Yu'lon
-    if I.InvocationOfYulon:IsEquipped() and I.InvocationOfYulon:IsReady() then
+    if I.InvocationOfYulon:IsEquipped() and I.InvocationOfYulon:IsReady() and HR.CDsON() then
       if HR.CastSuggested(I.InvocationOfYulon) then return ""; end
     end
     -- potion
