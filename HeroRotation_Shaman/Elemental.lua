@@ -124,6 +124,16 @@ local function GetEnemiesCount(range)
   end
 end
 
+local function ResonanceTotemTime()
+  for index=1,4 do
+    local _, totemName, startTime, duration = GetTotemInfo(index)
+    if totemName == "Totem Mastery" then
+      return (floor(startTime + duration - GetTime() + 0.5)) or 0
+    end
+  end
+  return 0
+end
+
 local function num(val)
   if val then return 1 else return 0 end
 end
@@ -172,7 +182,7 @@ local function APL()
     -- snapshot_stats
     if Everyone.TargetIsValid() then
       -- totem_mastery
-      if S.TotemMastery:IsCastableP() then
+      if S.TotemMastery:IsReadyP() then
         if HR.Cast(S.TotemMastery) then return "totem_mastery 4"; end
       end
       -- earth_elemental,if=!talent.primal_elementalist.enabled
@@ -366,7 +376,7 @@ local function APL()
       if HR.Cast(S.FlameShock) then return "flame_shock 748"; end
     end
     -- totem_mastery,if=talent.totem_mastery.enabled&(buff.resonance_totem.remains<6|(buff.resonance_totem.remains<(buff.ascendance.duration+cooldown.ascendance.remains)&cooldown.ascendance.remains<15))
-    if S.TotemMastery:IsCastableP() and (S.TotemMastery:IsAvailable() and (Player:BuffRemainsP(S.ResonanceTotemBuff) < 6 or (Player:BuffRemainsP(S.ResonanceTotemBuff) < (S.Ascendance:BaseDuration() + S.Ascendance:CooldownRemainsP()) and S.Ascendance:CooldownRemainsP() < 15))) then
+    if S.TotemMastery:IsReadyP() and (S.TotemMastery:IsAvailable() and (ResonanceTotemTime() < 6 or (ResonanceTotemTime() < (S.Ascendance:BaseDuration() + S.Ascendance:CooldownRemainsP()) and S.Ascendance:CooldownRemainsP() < 15))) then
       if HR.Cast(S.TotemMastery) then return "totem_mastery 750"; end
     end
     -- frost_shock,if=talent.icefury.enabled&buff.icefury.up&(buff.icefury.remains<gcd*4*buff.icefury.stack|buff.stormkeeper.up|!talent.master_of_the_elements.enabled)
@@ -490,7 +500,7 @@ local function APL()
       if HR.CastCycle(S.FlameShock, 40, EvaluateCycleFlameShock511) then return "flame_shock 521" end
     end
     -- totem_mastery,if=talent.totem_mastery.enabled&(buff.resonance_totem.remains<6|(buff.resonance_totem.remains<(buff.ascendance.duration+cooldown.ascendance.remains)&cooldown.ascendance.remains<15))
-    if S.TotemMastery:IsCastableP() and (S.TotemMastery:IsAvailable() and (Player:BuffRemainsP(S.ResonanceTotemBuff) < 6 or (Player:BuffRemainsP(S.ResonanceTotemBuff) < (S.AscendanceBuff:BaseDuration() + S.Ascendance:CooldownRemainsP()) and S.Ascendance:CooldownRemainsP() < 15))) then
+    if S.TotemMastery:IsReadyP() and (S.TotemMastery:IsAvailable() and (ResonanceTotemTime() < 6 or (ResonanceTotemTime() < (S.AscendanceBuff:BaseDuration() + S.Ascendance:CooldownRemainsP()) and S.Ascendance:CooldownRemainsP() < 15))) then
       if HR.Cast(S.TotemMastery) then return "totem_mastery 522"; end
     end
     -- frost_shock,if=talent.icefury.enabled&buff.icefury.up&(buff.icefury.remains<gcd*4*buff.icefury.stack|buff.stormkeeper.up|!talent.master_of_the_elements.enabled)
@@ -531,7 +541,7 @@ local function APL()
       if HR.CastSuggested(I.PotionofUnbridledFury) then return "battle_potion_of_intellect 577"; end
     end
     -- totem_mastery,if=talent.totem_mastery.enabled&buff.resonance_totem.remains<2
-    if S.TotemMastery:IsCastableP() and (S.TotemMastery:IsAvailable() and not Player:BuffP(S.ResonanceTotemBuff)) then
+    if S.TotemMastery:IsReadyP() and (S.TotemMastery:IsAvailable() and not Player:BuffP(S.ResonanceTotemBuff)) then
       if HR.Cast(S.TotemMastery) then return "totem_mastery 585"; end
     end
     -- use_items
@@ -546,39 +556,39 @@ local function APL()
     -- earth_elemental,if=!talent.primal_elementalist.enabled|talent.primal_elementalist.enabled&(cooldown.fire_elemental.remains<120&!talent.storm_elemental.enabled|cooldown.storm_elemental.remains<120&talent.storm_elemental.enabled)
     -- concentrated_flame
     if S.ConcentratedFlame:IsCastableP() then
-      if HR.Cast(S.ConcentratedFlame, Settings.Elemental.GCDasOffGCD.Essences) then return "concentrated_flame"; end
+      if HR.Cast(S.ConcentratedFlame, nil, Settings.Commons.EssenceDisplayStyle) then return "concentrated_flame"; end
     end
     -- blood_of_the_enemy
     if S.BloodoftheEnemy:IsCastableP() then
-      if HR.CasT(S.BloodoftheEnemy, Settings.Elemental.GCDasOffGCD.Essences) then return "blood_of_the_enemy"; end
+      if HR.CasT(S.BloodoftheEnemy, nil, Settings.Commons.EssenceDisplayStyle) then return "blood_of_the_enemy"; end
     end
     -- guardian_of_azeroth
     if S.GuardianofAzeroth:IsCastableP() then
-      if HR.Cast(S.GuardianofAzeroth, Settings.Elemental.GCDasOffGCD.Essences) then return "guardian_of_azeroth"; end
+      if HR.Cast(S.GuardianofAzeroth, nil, Settings.Commons.EssenceDisplayStyle) then return "guardian_of_azeroth"; end
     end
     -- focused_azerite_beam
     if S.FocusedAzeriteBeam:IsCastableP() then
-      if HR.Cast(S.FocusedAzeriteBeam, Settings.Elemental.GCDasOffGCD.Essences) then return "focused_azerite_beam"; end
+      if HR.Cast(S.FocusedAzeriteBeam, nil, Settings.Commons.EssenceDisplayStyle) then return "focused_azerite_beam"; end
     end
     -- purifying_blast
     if S.PurifyingBlast:IsCastableP() then
-      if HR.Cast(S.PurifyingBlast, Settings.Elemental.GCDasOffGCD.Essences) then return "purifying_blast"; end
+      if HR.Cast(S.PurifyingBlast, nil, Settings.Commons.EssenceDisplayStyle) then return "purifying_blast"; end
     end
     -- the_unbound_force
     if S.TheUnboundForce:IsCastableP() then
-      if HR.Cast(S.TheUnboundForce, Settings.Elemental.GCDasOffGCD.Essences) then return "the_unbound_force"; end
+      if HR.Cast(S.TheUnboundForce, nil, Settings.Commons.EssenceDisplayStyle) then return "the_unbound_force"; end
     end
     -- memory_of_lucid_dreams
     if S.MemoryofLucidDreams:IsCastableP() then
-      if HR.Cast(S.MemoryofLucidDreams, Settings.Elemental.GCDasOffGCD.Essences) then return "memory_of_lucid_dreams"; end
+      if HR.Cast(S.MemoryofLucidDreams, nil, Settings.Commons.EssenceDisplayStyle) then return "memory_of_lucid_dreams"; end
     end
     -- ripple_in_space
     if S.RippleInSpace:IsCastableP() then
-      if HR.Cast(S.RippleInSpace, Settings.Elemental.GCDasOffGCD.Essences) then return "ripple_in_space"; end
+      if HR.Cast(S.RippleInSpace, nil, Settings.Commons.EssenceDisplayStyle) then return "ripple_in_space"; end
     end
     -- worldvein_resonance
     if S.WorldveinResonance:IsCastableP() then
-      if HR.Cast(S.WorldveinResonance, Settings.Elemental.GCDasOffGCD.Essences) then return "worldvein_resonance"; end
+      if HR.Cast(S.WorldveinResonance, nil, Settings.Commons.EssenceDisplayStyle) then return "worldvein_resonance"; end
     end
     -- blood_fury,if=!talent.ascendance.enabled|buff.ascendance.up|cooldown.ascendance.remains>50
     if S.BloodFury:IsCastableP() and HR.CDsON() and (not S.Ascendance:IsAvailable() or Player:BuffP(S.AscendanceBuff) or S.Ascendance:CooldownRemainsP() > 50) then
