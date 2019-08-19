@@ -65,7 +65,6 @@ Spell.Druid.Balance = {
   Renewal                               = Spell(108238),
   SolarBeam                             = Spell(78675),
   ShiverVenomDebuff                     = Spell(301624),
-  CyclotronicBlast                      = Spell(167672),
   AzsharasFontofPowerBuff               = Spell(296962),
   BloodoftheEnemy                       = MultiSpell(297108, 298273, 298277),
   MemoryofLucidDreams                   = MultiSpell(298357, 299372, 299374),
@@ -211,10 +210,6 @@ local function EvaluateCycleGuardianofAzeroth78(TargetUnit)
   return (TargetUnit:DebuffP(S.MoonfireDebuff) and TargetUnit:DebuffP(S.SunfireDebuff) and (not S.StellarFlare:IsAvailable() or TargetUnit:DebuffP(S.StellarFlareDebuff))) and ((not S.Starlord:IsAvailable() or Player:BuffP(S.StarlordBuff)) and Player:BuffDownP(CaInc()))
 end
 
-local function EvaluateCyclePocketsizedComputationDevice103(TargetUnit)
-  return (TargetUnit:DebuffP(S.MoonfireDebuff) and TargetUnit:DebuffP(S.SunfireDebuff) and (not S.StellarFlare:IsAvailable() or TargetUnit:DebuffP(S.StellarFlareDebuff))) and (I.PocketsizedComputationDevice:IsEquipped() and Player:BuffDownP(CaInc()))
-end
-
 local function EvaluateCycleShiverVenomRelic104(TargetUnit)
   return (Player:BuffDownP(CaInc()) and TargetUnit:DebuffStackP(S.ShiverVenomDebuff) >= 5)
 end
@@ -286,7 +281,7 @@ local function APL()
       if HR.Cast(S.MoonkinForm, Settings.Balance.GCDasOffGCD.MoonkinForm) then return "moonkin_form 39"; end
     end
     -- use_item,name=azsharas_font_of_power
-    if I.AzsharasFontofPower:IsEquipped() and I.AzsharasFontofPower:IsReady() and Settings.Commons.UseTrinkets then
+    if I.AzsharasFontofPower:IsEquipReady() and Settings.Commons.UseTrinkets then
       if HR.Cast(I.AzsharasFontofPower, nil, Settings.Commons.TrinketDisplayStyle) then return "azsharas_font_of_power precombat"; end
     end
     -- potion,dynamic_prepot=1
@@ -333,7 +328,7 @@ local function APL()
       if HR.Cast(S.Berserking, Settings.Commons.OffGCDasOffGCD.Racials) then return "berserking 65"; end
     end
     -- use_item,name=azsharas_font_of_power,if=!buff.ca_inc.up,target_if=dot.moonfire.ticking&dot.sunfire.ticking&(!talent.stellar_flare.enabled|dot.stellar_flare.ticking)
-    if I.AzsharasFontofPower:IsEquipped() and I.AzsharasFontofPower:IsReady() and Settings.Commons.UseTrinkets and (Player:BuffDownP(CaInc()) and DoTsUp())then
+    if I.AzsharasFontofPower:IsEquipReady() and Settings.Commons.UseTrinkets and (Player:BuffDownP(CaInc()) and DoTsUp())then
       if HR.Cast(I.AzsharasFontofPower, nil, Settings.Commons.TrinketDisplayStyle) then return "azsharas_font_of_power 73" end
     end
     -- guardian_of_azeroth,if=(!talent.starlord.enabled|buff.starlord.up)&!buff.ca_inc.up,target_if=dot.moonfire.ticking&dot.sunfire.ticking&(!talent.stellar_flare.enabled|dot.stellar_flare.ticking)
@@ -341,11 +336,11 @@ local function APL()
       if HR.CastCycle(S.GuardianofAzeroth, 40, EvaluateCycleGuardianofAzeroth78) then return "guardian_of_azeroth 94" end
     end
     -- use_item,effect_name=cyclotronic_blast,if=!buff.ca_inc.up,target_if=dot.moonfire.ticking&dot.sunfire.ticking&(!talent.stellar_flare.enabled|dot.stellar_flare.ticking)
-    if I.PocketsizedComputationDevice:IsEquipped() and I.PocketsizedComputationDevice:IsReady() and S.CyclotronicBlast:IsAvailable() and Settings.Commons.UseTrinkets then
-      if HR.CastCycle(I.PocketsizedComputationDevice, 40, EvaluateCyclePocketsizedComputationDevice103) then return "pocketsized_computation_device 117" end
+    if Everyone.CyclotronicBlastReady() and Settings.Commons.UseTrinkets and DoTsUp() then
+      if HR.Cast(I.PocketsizedComputationDevice, nil, Settings.Commons.TrinketDisplayStyle) then return "cyclotronic_blast 117" end
     end
     -- use_item,name=shiver_venom_relicif=!buff.ca_inc.up,target_if=dot.shiver_venom.stack>=5
-    if I.ShiverVenomRelic:IsEquipped() and I.ShiverVenomRelic:IsReady() and Settings.Commons.UseTrinkets then
+    if I.ShiverVenomRelic:IsEquipReady() and Settings.Commons.UseTrinkets then
       if HR.CastCycle(I.ShiverVenomRelic, 40, EvaluateCycleShiverVenomRelic104) then return "shiver_venom_relic 105"; end
     end
     -- blood_of_the_enemy,if=cooldown.ca_inc.remains>30

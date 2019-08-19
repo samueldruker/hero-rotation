@@ -73,8 +73,7 @@ Spell.Mage.Arcane = {
   FocusedAzeriteBeam                    = MultiSpell(295258, 299336, 299338),
   GuardianofAzeroth                     = MultiSpell(295840, 299355, 299358),
   RecklessForceBuff                     = Spell(302932),
-  ConcentratedFlameBurn                 = Spell(295368),
-  CyclotronicBlast                      = Spell(167672)
+  ConcentratedFlameBurn                 = Spell(295368)
 };
 local S = Spell.Mage.Arcane;
 
@@ -258,7 +257,7 @@ local function APL()
       if HR.Cast(S.LightsJudgment) then return "lights_judgment 72"; end
     end
     -- use_item,name=azsharas_font_of_power,if=cooldown.arcane_power.remains<5|time_to_die<cooldown.arcane_power.remains
-    if I.AzsharasFontofPower:IsEquipped() and I.AzsharasFontofPower:IsReady() and Settings.Commons.UseTrinkets and (S.ArcanePower:CooldownRemainsP() < 5 or Target:TimeToDie() < S.ArcanePower:CooldownRemainsP()) then
+    if I.AzsharasFontofPower:IsEquipReady() and Settings.Commons.UseTrinkets and (S.ArcanePower:CooldownRemainsP() < 5 or Target:TimeToDie() < S.ArcanePower:CooldownRemainsP()) then
       if HR.Cast(I.AzsharasFontofPower, nil, Settings.Commons.TrinketDisplayStyle) then return "azsharas_font_of_power 73"; end
     end
     -- rune_of_power,if=!buff.arcane_power.up&(mana.pct>=50|cooldown.arcane_power.remains=0)&(buff.arcane_charge.stack=buff.arcane_charge.max_stack)
@@ -349,11 +348,11 @@ local function APL()
       if HR.Cast(S.ArcaneBlast) then return "arcane_blast 243"; end
     end
     -- use_item,name=tidestorm_codex,if=buff.rune_of_power.down&!buff.arcane_power.react&cooldown.arcane_power.remains>20
-    if I.TidestormCodex:IsEquipped() and I.TidestormCodex:IsReady() and Settings.Commons.UseTrinkets and (Player:BuffDownP(S.RuneofPowerBuff) and not bool(Player:BuffStackP(S.ArcanePowerBuff)) and S.ArcanePower:CooldownRemainsP() > 20) then
+    if I.TidestormCodex:IsEquipReady() and Settings.Commons.UseTrinkets and (Player:BuffDownP(S.RuneofPowerBuff) and not bool(Player:BuffStackP(S.ArcanePowerBuff)) and S.ArcanePower:CooldownRemainsP() > 20) then
       if HR.Cast(I.TidestormCodex, nil, Settings.Commons.TrinketDisplayStyle) then return "tidestorm_codex 249"; end
     end
     -- use_item,effect_name=cyclotronic_blast,if=buff.rune_of_power.down&!buff.arcane_power.react&cooldown.arcane_power.remains>20
-    if I.PocketsizedComputationDevice:IsEquipped() and I.PocketsizedComputationDevice:IsReady() and S.CyclotronicBlast:IsAvailable() and Settings.Commons.UseTrinkets and (Player:BuffDownP(S.RuneofPowerBuff) and Player:BuffDownP(S.ArcanePowerBuff) and S.ArcanePower:CooldownRemainsP() > 20) then
+    if Everyone.CyclotronicBlastReady() and Settings.Commons.UseTrinkets and (Player:BuffDownP(S.RuneofPowerBuff) and Player:BuffDownP(S.ArcanePowerBuff) and S.ArcanePower:CooldownRemainsP() > 20) then
       if HR.Cast(I.PocketsizedComputationDevice, nil, Settings.Commons.TrinketDisplayStyle) then return "pocketsized_computation_device 250"; end
     end
     -- rune_of_power,if=buff.arcane_charge.stack=buff.arcane_charge.max_stack&(full_recharge_time<=execute_time|full_recharge_time<=cooldown.arcane_power.remains|target.time_to_die<=cooldown.arcane_power.remains)

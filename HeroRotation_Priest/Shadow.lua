@@ -56,7 +56,6 @@ Spell.Priest.Shadow = {
   ShadowWordVoid                        = Spell(205351),
   Silence                               = Spell(15487),
   ChorusofInsanity                      = Spell(278661),
-  CyclotronicBlast                      = Spell(167672),
   BloodoftheEnemy                       = MultiSpell(297108, 298273, 298277),
   MemoryofLucidDreams                   = MultiSpell(298357, 299372, 299374),
   PurifyingBlast                        = MultiSpell(295337, 299345, 299347),
@@ -210,7 +209,7 @@ local function APL()
         if HR.Cast(S.Shadowform, Settings.Shadow.GCDasOffGCD.Shadowform) then return "shadowform 44"; end
       end
       -- use_item,name=azsharas_font_of_power
-      if I.AzsharasFontofPower:IsEquipped() and I.AzsharasFontofPower:IsReady() and Settings.Commons.UseTrinkets then
+      if I.AzsharasFontofPower:IsEquipReady() and Settings.Commons.UseTrinkets then
         if HR.Cast(I.AzsharasFontofPower, nil, Settings.Commons.TrinketDisplayStyle) then return "azsharas_font_of_power 50"; end
       end
       -- mind_blast,if=spell_targets.mind_sear<2|azerite.thought_harvester.rank=0
@@ -354,11 +353,11 @@ local function APL()
   end
   CritCds = function()
     -- use_item,name=azsharas_font_of_power
-    if I.AzsharasFontofPower:IsEquipped() and I.AzsharasFontofPower:IsReady() and Settings.Commons.UseTrinkets then
+    if I.AzsharasFontofPower:IsEquipReady() and Settings.Commons.UseTrinkets then
       if HR.Cast(I.AzsharasFontofPower, nil, Settings.Commons.TrinketDisplayStyle) then return "azsharas_font_of_power critcds"; end
     end
     -- use_item,effect_name=cyclotronic_blast
-    if I.PocketsizedComputationDevice:IsEquipped() and I.PocketsizedComputationDevice:IsReady() and S.CyclotonicBlast:IsAvailable() and Settings.Commons.UseTrinkets then
+    if Everyone.CyclotronicBlastReady() and Settings.Commons.UseTrinkets then
       if HR.Cast(I.PocketsizedComputationDevice, nil, Settings.Commons.TrinketDisplayStyle) then return "pocketsized_computation_device critcds"; end
     end
   end

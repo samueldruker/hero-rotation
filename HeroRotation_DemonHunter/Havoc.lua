@@ -56,7 +56,6 @@ Spell.DemonHunter.Havoc = {
   ChaosNova                             = Spell(179057),
   RazorCoralDebuff                      = Spell(303568),
   ConductiveInkDebuff                   = Spell(302565),
-  CyclotronicBlast                      = Spell(167672),
   BloodoftheEnemy                       = MultiSpell(297108, 298273, 298277),
   MemoryofLucidDreams                   = MultiSpell(298357, 299372, 299374),
   PurifyingBlast                        = MultiSpell(295337, 299345, 299347),
@@ -76,7 +75,7 @@ local S = Spell.DemonHunter.Havoc;
 -- Items
 if not Item.DemonHunter then Item.DemonHunter = {} end
 Item.DemonHunter.Havoc = {
-  PotionofFocusedResolve           = Item(168506),
+  PotionofUnbridledFury            = Item(169299),
   AshvanesRazorCoral               = Item(169311),
   DribblingInkpod                  = Item(169319),
   AzsharasFontofPower              = Item(169314),
@@ -101,6 +100,8 @@ local StunInterrupts = {
   {S.FelEruption, "Cast Fel Eruption (Interrupt)", function () return true; end},
   {S.ChaosNova, "Cast Chaos Nova (Interrupt)", function () return true; end},
 };
+
+S.ConcentratedFlame:RegisterInFlight()
 
 -- Variables
 local VarPoolingForMeta = 0;
@@ -174,8 +175,8 @@ local function APL()
     -- food
     -- snapshot_stats
     -- potion
-    if I.PotionofFocusedResolve:IsReady() and Settings.Commons.UsePotions then
-      if HR.CastSuggested(I.PotionofFocusedResolve) then return "battle_potion_of_agility 4"; end
+    if I.PotionofUnbridledFury:IsReady() and Settings.Commons.UsePotions then
+      if HR.CastSuggested(I.PotionofUnbridledFury) then return "potion_of_unbridled_fury 4"; end
     end
     -- Immolation Aura
     if S.ImmolationAura:IsCastableP() then
@@ -186,13 +187,13 @@ local function APL()
       if HR.Cast(S.Metamorphosis, Settings.Havoc.OffGCDasOffGCD.Metamorphosis) then return "metamorphosis 6"; end
     end
     -- use_item,name=azsharas_font_of_power
-    if I.AzsharasFontofPower:IsEquipped() and I.AzsharasFontofPower:IsReady() and Settings.Commons.UseTrinkets then
+    if I.AzsharasFontofPower:IsEquipReady() and Settings.Commons.UseTrinkets then
       if HR.Cast(I.AzsharasFontofPower) then return "azsharas_font_of_power 7"; end
     end
   end
   Essences = function()
-    -- concentrated_flame
-    if S.ConcentratedFlame:IsCastableP() then
+    -- concentrated_flame,if=(!dot.concentrated_flame_burn.ticking&!action.concentrated_flame.in_flight|full_recharge_time<gcd.max)
+    if S.ConcentratedFlame:IsCastableP() and (Target:DebuffDownP(S.ConcentratedFlameBurn) and not S.ConcentratedFlame:InFlight() or S.ConcentratedFlame:FullRechargeTimeP() < Player:GCD()) then
       if HR.Cast(S.ConcentratedFlame, nil, Settings.Commons.EssenceDisplayStyle) then return "concentrated_flame"; end
     end
     -- blood_of_the_enemy,if=buff.metamorphosis.up|target.time_to_die<=10
@@ -243,24 +244,24 @@ local function APL()
       if HR.Cast(S.Nemesis, Settings.Havoc.GCDasOffGCD.Nemesis) then return "nemesis 51"; end
     end
     -- potion,if=buff.metamorphosis.remains>25|target.time_to_die<60
-    if I.PotionofFocusedResolve:IsReady() and Settings.Commons.UsePotions and (Player:BuffRemainsP(S.MetamorphosisBuff) > 25 or Target:TimeToDie() < 60) then
-      if HR.CastSuggested(I.PotionofFocusedResolve) then return "battle_potion_of_agility 55"; end
+    if I.PotionofUnbridledFury:IsReady() and Settings.Commons.UsePotions and (Player:BuffRemainsP(S.MetamorphosisBuff) > 25 or Target:TimeToDie() < 60) then
+      if HR.CastSuggested(I.PotionofUnbridledFury) then return "potion_of_unbridled_fury 55"; end
     end
     if (Settings.Commons.UseTrinkets) then
       -- use_item,name=galecallers_boon,if=!talent.fel_barrage.enabled|cooldown.fel_barrage.ready
-      if I.GalecallersBoon:IsEquipped() and I.GalecallersBoon:IsReady() and (not S.FelBarrage:IsAvailable() or S.FelBarrage:CooldownUpP()) then
+      if I.GalecallersBoon:IsEquipReady() and (not S.FelBarrage:IsAvailable() or S.FelBarrage:CooldownUpP()) then
         if HR.Cast(I.GalecallersBoon, nil, Settings.Commons.TrinketDisplayStyle) then return "galecallers_boon 56"; end
       end
       -- use_item,effect_name=cyclotronic_blast,if=buff.metamorphosis.up&buff.memory_of_lucid_dreams.down&(!variable.blade_dance|!cooldown.blade_dance.ready)
-      if I.PocketsizedComputationDevice:IsEquipped() and I.PocketsizedComputationDevice:IsReady() and S.CyclotronicBlast:IsAvailable() and (Player:BuffP(S.MetamorphosisBuff) and Player:BuffDownP(S.MemoryofLucidDreams) and (not bool(VarBladeDance) or not S.BladeDance:IsReady())) then
+      if Everyone.CyclotronicBlastReady() and (Player:BuffP(S.MetamorphosisBuff) and Player:BuffDownP(S.MemoryofLucidDreams) and (not bool(VarBladeDance) or not S.BladeDance:IsReady())) then
         if HR.Cast(I.PocketsizedComputationDevice, nil, Settings.Commons.TrinketDisplayStyle) then return "cyclotronic_blast 57"; end
       end
       -- use_item,name=ashvanes_razor_coral,if=debuff.razor_coral_debuff.down|(debuff.conductive_ink_debuff.up|buff.metamorphosis.remains>20)&target.health.pct<31|target.time_to_die<20
-      if I.AshvanesRazorCoral:IsEquipped() and I.AshvanesRazorCoral:IsReady() and (Target:DebuffDownP(S.RazorCoralDebuff) or (Target:DebuffP(S.ConductiveInkDebuff) or Player:BuffRemainsP(S.MetamorphosisBuff) > 20) and Target:HealthPercentage() < 31 or Target:TimeToDie() < 20) then
+      if I.AshvanesRazorCoral:IsEquipReady() and (Target:DebuffDownP(S.RazorCoralDebuff) or (Target:DebuffP(S.ConductiveInkDebuff) or Player:BuffRemainsP(S.MetamorphosisBuff) > 20) and Target:HealthPercentage() < 31 or Target:TimeToDie() < 20) then
         if HR.Cast(I.AshvanesRazorCoral, nil, Settings.Commons.TrinketDisplayStyle) then return "ashvanes_razor_coral 59"; end
       end
       -- use_item,name=azsharas_font_of_power,if=cooldown.metamorphosis.remains<10|cooldown.metamorphosis.remains>60
-      if I.AzsharasFontofPower:IsEquipped() and I.AzsharasFontofPower:IsReady() and (S.Metamorphosis:CooldownRemainsP() < 10 or S.Metamorphosis:CooldownRemainsP() > 60) then
+      if I.AzsharasFontofPower:IsEquipReady() and (S.Metamorphosis:CooldownRemainsP() < 10 or S.Metamorphosis:CooldownRemainsP() > 60) then
         if HR.Cast(I.AzsharasFontofPower, nil, Settings.Commons.TrinketDisplayStyle) then return "azsharas_font_of_power 60"; end
       end
     end
@@ -449,7 +450,7 @@ local function APL()
       local ShouldReturn = Cooldown(); if ShouldReturn then return ShouldReturn; end
     end
     
-    -- pick_up_fragment,if=fury.deficit>=35
+    -- pick_up_fragment,if=fury.deficit>=35&(!azerite.eyes_of_rage.enabled|cooldown.eye_beam.remains>1.4)
     -- TODO: Can't detect when orbs actually spawn, we could possibly show a suggested icon when we DON'T want to pick up souls so people can avoid moving?
     
     -- call_action_list,name=dark_slash,if=talent.dark_slash.enabled&(variable.waiting_for_dark_slash|debuff.dark_slash.up)

@@ -77,6 +77,7 @@ Spell.Shaman.Enhancement = {
   Boulderfist                           = Spell(246035),
   StrengthofEarth                       = Spell(273461),
   CapacitorTotem                        = Spell(192058),
+  ElementalSpirits                      = Spell(262624),
   RazorCoralDebuff                      = Spell(303568),
   ConductiveInkDebuff                   = Spell(302565),
   BloodoftheEnemy                       = MultiSpell(297108, 298273, 298277),
@@ -168,9 +169,18 @@ local function bool(val)
   return val ~= 0
 end
 
+local function FeralSpiritRemains()
+  if S.FeralSpirit:CooldownRemainsP() == 0 then return 0; end
+  if S.ElementalSpirits:IsAvailable() then
+    return (S.FeralSpirit:CooldownRemainsP() - 74)
+  else
+    return (S.FeralSpirit:CooldownRemainsP() - 104)
+  end
+end
+
 local function SetVariables()
   -- variable,name=cooldown_sync,value=(talent.ascendance.enabled&(buff.ascendance.up|cooldown.ascendance.remains>50))|(!talent.ascendance.enabled&(feral_spirit.remains>5|cooldown.feral_spirit.remains>50))
-  VarCooldownSync = num((S.Ascendance:IsAvailable() and (Player:BuffP(S.AscendanceBuff) or S.Ascendance:CooldownRemainsP() > 50)) or (not S.Ascendance:IsAvailable() and (feral_spirit.remains > 5 or S.FeralSpirit:CooldownRemainsP() > 50)))
+  VarCooldownSync = num((S.Ascendance:IsAvailable() and (Player:BuffP(S.AscendanceBuff) or S.Ascendance:CooldownRemainsP() > 50)) or (not S.Ascendance:IsAvailable() and (FeralSpiritRemains() > 5 or S.FeralSpirit:CooldownRemainsP() > 50)))
   -- variable,name=furyCheck_SS,value=maelstrom>=(talent.fury_of_air.enabled*(6+action.stormstrike.cost))
   VarFurycheckSs = num(Player:Maelstrom() >= (num(S.FuryofAir:IsAvailable()) * (6 + S.Stormstrike:Cost())))
   -- variable,name=furyCheck_LL,value=maelstrom>=(talent.fury_of_air.enabled*(6+action.lava_lash.cost))
@@ -245,7 +255,7 @@ local function APL()
         if HR.Cast(S.LightningShield) then return "lightning_shield 6"; end
       end
       -- use_item,name=azsharas_font_of_power
-      if I.AzsharasFontofPower:IsEquipped() and I.AzsharasFontofPower:IsReady() and Settings.Commons.UseTrinkets then
+      if I.AzsharasFontofPower:IsEquipReady() and Settings.Commons.UseTrinkets then
         if HR.Cast(I.AzsharasFontofPower, nil, Settings.Commons.TrinketDisplayStyle) then return "azsharas_font_of_power 8"; end
       end
       -- rockbiter,if=maelstrom<15&time<gcd
@@ -256,7 +266,7 @@ local function APL()
   end
   Asc = function()
     -- crash_lightning,if=!buff.crash_lightning.up&active_enemies>1&variable.furyCheck_CL
-    if S.CrashLightning:IsCastableP() and (Player:BuffDownP(S.CrashLightningBuff) and Cache.EnemiesCount[8] > 1 and bool(VarFurycheckCl)) then
+    if S.CrashLightning:IsReadyP() and (Player:BuffDownP(S.CrashLightningBuff) and Cache.EnemiesCount[8] > 1 and bool(VarFurycheckCl)) then
       if HR.Cast(S.CrashLightning) then return "crash_lightning 10"; end
     end
     -- rockbiter,if=talent.landslide.enabled&!buff.landslide.up&charges_fractional>1.7
@@ -264,7 +274,7 @@ local function APL()
       if HR.Cast(S.Rockbiter) then return "rockbiter 24"; end
     end
     -- windstrike
-    if S.Windstrike:IsCastableP() then
+    if S.Windstrike:IsReadyP() then
       if HR.Cast(S.Windstrike) then return "windstrike 34"; end
     end
   end
@@ -275,7 +285,7 @@ local function APL()
       if HR.Cast(S.Berserking, Settings.Commons.OffGCDasOffGCD.Racials) then return "berserking 37"; end
     end
     -- use_item,name=azsharas_font_of_power
-    if I.AzsharasFontofPower:IsEquipped() and I.AzsharasFontofPower:IsReady() and Settings.Commons.UseTrinkets then
+    if I.AzsharasFontofPower:IsEquipReady() and Settings.Commons.UseTrinkets then
       if HR.Cast(I.AzsharasFontofPower, nil, Settings.Commons.TrinketDisplayStyle) then return "azsharas_font_of_power 41"; end
     end
     -- blood_fury,if=variable.cooldown_sync
@@ -291,7 +301,7 @@ local function APL()
       if HR.Cast(S.AncestralCall, Settings.Commons.OffGCDasOffGCD.Racials) then return "ancestral_call 51"; end
     end
     -- potion,if=buff.ascendance.up|!talent.ascendance.enabled&feral_spirit.remains>5|target.time_to_die<=60
-    if I.PotionofUnbridledFury:IsReady() and Settings.Commons.UsePotions and (Player:BuffP(S.AscendanceBuff) or not S.Ascendance:IsAvailable() and feral_spirit.remains > 5 or Target:TimeToDie() <= 60) then
+    if I.PotionofUnbridledFury:IsReady() and Settings.Commons.UsePotions and (Player:BuffP(S.AscendanceBuff) or not S.Ascendance:IsAvailable() and FeralSpiritRemains() > 5 or Target:TimeToDie() <= 60) then
       if HR.CastSuggested(I.PotionofUnbridledFury) then return "potion_of_unbridled_fury 55"; end
     end
     -- guardian_of_azeroth
@@ -299,8 +309,8 @@ local function APL()
       if HR.Cast(S.GuardianofAzeroth, nil, Settings.Commons.EssenceDisplayStyle) then return "guardian_of_azeroth 61"; end
     end
     -- feral_spirit
-    if S.FeralSpirit:IsCastableP() then
-      if HR.Cast(S.FeralSpirit) then return "feral_spirit 65"; end
+    if S.FeralSpirit:IsCastableP() and Settings.Enhancement.EnableFS then
+      if HR.Cast(S.FeralSpirit, Settings.Enhancement.GCDasOffGCD.FeralSpirit) then return "feral_spirit 65"; end
     end
     -- blood_of_the_enemy,if=raid_event.adds.in>90|active_enemies>1
     if S.BloodoftheEnemy:IsCastableP() then
@@ -309,18 +319,18 @@ local function APL()
     -- ascendance,if=cooldown.strike.remains>0
     -- Storm Strike???
     if S.Ascendance:IsCastableP() and (S.Stormstrike:CooldownRemainsP() > 0) then
-      if HR.Cast(S.Ascendance) then return "ascendance 69"; end
+      if HR.Cast(S.Ascendance, Settings.Enhancement.GCDasOffGCD.Ascendance) then return "ascendance 69"; end
     end
     -- use_item,name=ashvanes_razor_coral,if=debuff.razor_coral_debuff.down|(target.time_to_die<20&debuff.razor_coral_debuff.stack>2)
-    if I.AshvanesRazorCoral:IsEquipped() and I.AshvanesRazorCoral:IsReady() and Settings.Commons.UseTrinkets and (Target:DebuffDownP(S.RazorCoralDebuffDebuff) or (Target:TimeToDie() < 20 and Target:DebuffStackP(S.RazorCoralDebuffDebuff) > 2)) then
+    if I.AshvanesRazorCoral:IsEquipReady() and Settings.Commons.UseTrinkets and (Target:DebuffDownP(S.RazorCoralDebuffDebuff) or (Target:TimeToDie() < 20 and Target:DebuffStackP(S.RazorCoralDebuffDebuff) > 2)) then
       if HR.Cast(I.AshvanesRazorCoral, nil, Settings.Commons.TrinketDisplayStyle) then return "ashvanes_razor_coral 73"; end
     end
     -- use_item,name=ashvanes_razor_coral,if=debuff.razor_coral_debuff.stack>2&debuff.conductive_ink_debuff.down&(buff.ascendance.remains>10|buff.molten_weapon.remains>10|buff.crackling_surge.remains>10|buff.icy_edge.remains>10|debuff.earthen_spike.remains>6)
-    if I.AshvanesRazorCoral:IsEquipped() and I.AshvanesRazorCoral:IsReady() and Settings.Commons.UseTrinkets and (Target:DebuffStackP(S.RazorCoralDebuffDebuff) > 2 and Target:DebuffDownP(S.ConductiveInkDebuffDebuff) and (Player:BuffRemainsP(S.AscendanceBuff) > 10 or Player:BuffRemainsP(S.MoltenWeaponBuff) > 10 or Player:BuffRemainsP(S.CracklingSurgeBuff) > 10 or Player:BuffRemainsP(S.IcyEdgeBuff) > 10 or Target:DebuffRemainsP(S.EarthenSpikeDebuff) > 6)) then
+    if I.AshvanesRazorCoral:IsEquipReady() and Settings.Commons.UseTrinkets and (Target:DebuffStackP(S.RazorCoralDebuffDebuff) > 2 and Target:DebuffDownP(S.ConductiveInkDebuffDebuff) and (Player:BuffRemainsP(S.AscendanceBuff) > 10 or Player:BuffRemainsP(S.MoltenWeaponBuff) > 10 or Player:BuffRemainsP(S.CracklingSurgeBuff) > 10 or Player:BuffRemainsP(S.IcyEdgeBuff) > 10 or Target:DebuffRemainsP(S.EarthenSpikeDebuff) > 6)) then
       if HR.Cast(I.AshvanesRazorCoral, nil, Settings.Commons.TrinketDisplayStyle) then return "ashvanes_razor_coral 79"; end
     end
     -- use_item,name=ashvanes_razor_coral,if=(debuff.conductive_ink_debuff.up|buff.ascendance.remains>10|buff.molten_weapon.remains>10|buff.crackling_surge.remains>10|buff.icy_edge.remains>10|debuff.earthen_spike.remains>6)&target.health.pct<31
-    if I.AshvanesRazorCoral:IsEquipped() and I.AshvanesRazorCoral:IsReady() and Settings.Commons.UseTrinkets and ((Target:DebuffP(S.ConductiveInkDebuffDebuff) or Player:BuffRemainsP(S.AscendanceBuff) > 10 or Player:BuffRemainsP(S.MoltenWeaponBuff) > 10 or Player:BuffRemainsP(S.CracklingSurgeBuff) > 10 or Player:BuffRemainsP(S.IcyEdgeBuff) > 10 or Target:DebuffRemainsP(S.EarthenSpikeDebuff) > 6) and Target:HealthPercentage() < 31) then
+    if I.AshvanesRazorCoral:IsEquipReady() and Settings.Commons.UseTrinkets and ((Target:DebuffP(S.ConductiveInkDebuffDebuff) or Player:BuffRemainsP(S.AscendanceBuff) > 10 or Player:BuffRemainsP(S.MoltenWeaponBuff) > 10 or Player:BuffRemainsP(S.CracklingSurgeBuff) > 10 or Player:BuffRemainsP(S.IcyEdgeBuff) > 10 or Target:DebuffRemainsP(S.EarthenSpikeDebuff) > 6) and Target:HealthPercentage() < 31) then
       if HR.Cast(I.AshvanesRazorCoral, nil, Settings.Commons.TrinketDisplayStyle) then return "ashvanes_razor_coral 95"; end
     end
     -- use_items
@@ -328,19 +338,19 @@ local function APL()
   end
   DefaultCore = function()
     -- earthen_spike,if=variable.furyCheck_ES
-    if S.EarthenSpike:IsCastableP() and (bool(VarFurycheckEs)) then
+    if S.EarthenSpike:IsReadyP() and (bool(VarFurycheckEs)) then
       if HR.Cast(S.EarthenSpike) then return "earthen_spike 111"; end
     end
     -- stormstrike,cycle_targets=1,if=active_enemies>1&azerite.lightning_conduit.enabled&!debuff.lightning_conduit.up&variable.furyCheck_SS
-    if S.Stormstrike:IsCastableP() then
+    if S.Stormstrike:IsReadyP() then
       if HR.CastCycle(S.Stormstrike, 8, EvaluateCycleStormstrike119) then return "stormstrike 133" end
     end
     -- stormstrike,if=buff.stormbringer.up|(active_enemies>1&buff.gathering_storms.up&variable.furyCheck_SS)
-    if S.Stormstrike:IsCastableP() and (Player:BuffP(S.StormbringerBuff) or (Cache.EnemiesCount[8] > 1 and Player:BuffP(S.GatheringStormsBuff) and bool(VarFurycheckSs))) then
+    if S.Stormstrike:IsReadyP() and (Player:BuffP(S.StormbringerBuff) or (Cache.EnemiesCount[8] > 1 and Player:BuffP(S.GatheringStormsBuff) and bool(VarFurycheckSs))) then
       if HR.Cast(S.Stormstrike) then return "stormstrike 134"; end
     end
     -- crash_lightning,if=active_enemies>=3&variable.furyCheck_CL
-    if S.CrashLightning:IsCastableP() and (Cache.EnemiesCount[8] >= 3 and bool(VarFurycheckCl)) then
+    if S.CrashLightning:IsReadyP() and (Cache.EnemiesCount[8] >= 3 and bool(VarFurycheckCl)) then
       if HR.Cast(S.CrashLightning) then return "crash_lightning 148"; end
     end
     -- lightning_bolt,if=talent.overcharge.enabled&active_enemies=1&variable.furyCheck_LB&maelstrom>=40
@@ -348,14 +358,14 @@ local function APL()
       if HR.Cast(S.LightningBolt) then return "lightning_bolt 160"; end
     end
     -- stormstrike,if=variable.OCPool_SS&variable.furyCheck_SS
-    if S.Stormstrike:IsCastableP() and (bool(VarOcpoolSs) and bool(VarFurycheckSs)) then
+    if S.Stormstrike:IsReadyP() and (bool(VarOcpoolSs) and bool(VarFurycheckSs)) then
       if HR.Cast(S.Stormstrike) then return "stormstrike 172"; end
     end
   end
   Filler = function()
     -- sundering,if=raid_event.adds.in>40
-    if S.Sundering:IsCastableP() then
-      if HR.Cast(S.Sundering) then return "sundering 178"; end
+    if S.Sundering:IsReadyP() then
+      if HR.Cast(S.Sundering, Settings.Enhancement.GCDasOffGCD.Sundering) then return "sundering 178"; end
     end
     -- focused_azerite_beam,if=raid_event.adds.in>90&!buff.ascendance.up&!buff.molten_weapon.up&!buff.icy_edge.up&!buff.crackling_surge.up&!debuff.earthen_spike.up
     if S.FocusedAzeriteBeam:IsCastableP() and (Player:BuffDownP(S.AscendanceBuff) and Player:BuffDownP(S.MoltenWeaponBuff) and Player:BuffDownP(S.IcyEdgeBuff) and Player:BuffDownP(S.CracklingSurgeBuff) and not Target:DebuffP(S.EarthenSpikeDebuff)) then
@@ -378,7 +388,7 @@ local function APL()
       if HR.Cast(S.ConcentratedFlame, nil, Settings.Commons.EssenceDisplayStyle) then return "concentrated_flame 206"; end
     end
     -- crash_lightning,if=talent.forceful_winds.enabled&active_enemies>1&variable.furyCheck_CL
-    if S.CrashLightning:IsCastableP() and (S.ForcefulWinds:IsAvailable() and Cache.EnemiesCount[8] > 1 and bool(VarFurycheckCl)) then
+    if S.CrashLightning:IsReadyP() and (S.ForcefulWinds:IsAvailable() and Cache.EnemiesCount[8] > 1 and bool(VarFurycheckCl)) then
       if HR.Cast(S.CrashLightning) then return "crash_lightning 212"; end
     end
     -- flametongue,if=talent.searing_assault.enabled
@@ -386,11 +396,11 @@ local function APL()
       if HR.Cast(S.Flametongue) then return "flametongue 226"; end
     end
     -- lava_lash,if=!azerite.primal_primer.enabled&talent.hot_hand.enabled&buff.hot_hand.react
-    if S.LavaLash:IsCastableP() and (not S.PrimalPrimer:AzeriteEnabled() and S.HotHand:IsAvailable() and bool(Player:BuffStackP(S.HotHandBuff))) then
+    if S.LavaLash:IsReadyP() and (not S.PrimalPrimer:AzeriteEnabled() and S.HotHand:IsAvailable() and bool(Player:BuffStackP(S.HotHandBuff))) then
       if HR.Cast(S.LavaLash) then return "lava_lash 230"; end
     end
     -- crash_lightning,if=active_enemies>1&variable.furyCheck_CL
-    if S.CrashLightning:IsCastableP() and (Cache.EnemiesCount[8] > 1 and bool(VarFurycheckCl)) then
+    if S.CrashLightning:IsReadyP() and (Cache.EnemiesCount[8] > 1 and bool(VarFurycheckCl)) then
       if HR.Cast(S.CrashLightning) then return "crash_lightning 238"; end
     end
     -- rockbiter,if=maelstrom<70&!buff.strength_of_earth.up
@@ -398,11 +408,11 @@ local function APL()
       if HR.Cast(S.Rockbiter) then return "rockbiter 250"; end
     end
     -- crash_lightning,if=talent.crashing_storm.enabled&variable.OCPool_CL
-    if S.CrashLightning:IsCastableP() and (S.CrashingStorm:IsAvailable() and bool(VarOcpoolCl)) then
+    if S.CrashLightning:IsReadyP() and (S.CrashingStorm:IsAvailable() and bool(VarOcpoolCl)) then
       if HR.Cast(S.CrashLightning) then return "crash_lightning 254"; end
     end
     -- lava_lash,if=variable.OCPool_LL&variable.furyCheck_LL
-    if S.LavaLash:IsCastableP() and (bool(VarOcpoolLl) and bool(VarFurycheckLl)) then
+    if S.LavaLash:IsReadyP() and (bool(VarOcpoolLl) and bool(VarFurycheckLl)) then
       if HR.Cast(S.LavaLash) then return "lava_lash 260"; end
     end
     -- memory_of_lucid_dreams
@@ -414,7 +424,7 @@ local function APL()
       if HR.Cast(S.Rockbiter) then return "rockbiter 266"; end
     end
     -- frostbrand,if=talent.hailstorm.enabled&buff.frostbrand.remains<4.8+gcd&variable.furyCheck_FB
-    if S.Frostbrand:IsCastableP() and (S.Hailstorm:IsAvailable() and Player:BuffRemainsP(S.FrostbrandBuff) < 4.8 + Player:GCD() and bool(VarFurycheckFb)) then
+    if S.Frostbrand:IsReadyP() and (S.Hailstorm:IsAvailable() and Player:BuffRemainsP(S.FrostbrandBuff) < 4.8 + Player:GCD() and bool(VarFurycheckFb)) then
       if HR.Cast(S.Frostbrand) then return "frostbrand 268"; end
     end
     -- flametongue
@@ -428,23 +438,23 @@ local function APL()
   end
   FreezerburnCore = function()
     -- lava_lash,target_if=max:debuff.primal_primer.stack,if=azerite.primal_primer.rank>=2&debuff.primal_primer.stack=10&variable.furyCheck_LL&variable.CLPool_LL
-    if S.LavaLash:IsCastableP() then
+    if S.LavaLash:IsReadyP() then
       if HR.CastTargetIf(S.LavaLash, 8, "max", EvaluateTargetIfFilterLavaLash281, EvaluateTargetIfLavaLash296) then return "lava_lash 298" end
     end
     -- earthen_spike,if=variable.furyCheck_ES
-    if S.EarthenSpike:IsCastableP() and (bool(VarFurycheckEs)) then
+    if S.EarthenSpike:IsReadyP() and (bool(VarFurycheckEs)) then
       if HR.Cast(S.EarthenSpike) then return "earthen_spike 299"; end
     end
     -- stormstrike,cycle_targets=1,if=active_enemies>1&azerite.lightning_conduit.enabled&!debuff.lightning_conduit.up&variable.furyCheck_SS
-    if S.Stormstrike:IsCastableP() then
+    if S.Stormstrike:IsReadyP() then
       if HR.CastCycle(S.Stormstrike, 8, EvaluateCycleStormstrike307) then return "stormstrike 321" end
     end
     -- stormstrike,if=buff.stormbringer.up|(active_enemies>1&buff.gathering_storms.up&variable.furyCheck_SS)
-    if S.Stormstrike:IsCastableP() and (Player:BuffP(S.StormbringerBuff) or (Cache.EnemiesCount[8] > 1 and Player:BuffP(S.GatheringStormsBuff) and bool(VarFurycheckSs))) then
+    if S.Stormstrike:IsReadyP() and (Player:BuffP(S.StormbringerBuff) or (Cache.EnemiesCount[8] > 1 and Player:BuffP(S.GatheringStormsBuff) and bool(VarFurycheckSs))) then
       if HR.Cast(S.Stormstrike) then return "stormstrike 322"; end
     end
     -- crash_lightning,if=active_enemies>=3&variable.furyCheck_CL
-    if S.CrashLightning:IsCastableP() and (Cache.EnemiesCount[8] >= 3 and bool(VarFurycheckCl)) then
+    if S.CrashLightning:IsReadyP() and (Cache.EnemiesCount[8] >= 3 and bool(VarFurycheckCl)) then
       if HR.Cast(S.CrashLightning) then return "crash_lightning 336"; end
     end
     -- lightning_bolt,if=talent.overcharge.enabled&active_enemies=1&variable.furyCheck_LB&maelstrom>=40
@@ -452,15 +462,15 @@ local function APL()
       if HR.Cast(S.LightningBolt) then return "lightning_bolt 348"; end
     end
     -- lava_lash,if=azerite.primal_primer.rank>=2&debuff.primal_primer.stack>7&variable.furyCheck_LL&variable.CLPool_LL
-    if S.LavaLash:IsCastableP() and (S.PrimalPrimer:AzeriteRank() >= 2 and Target:DebuffStackP(S.PrimalPrimerDebuff) > 7 and bool(VarFurycheckLl) and bool(VarClpoolLl)) then
+    if S.LavaLash:IsReadyP() and (S.PrimalPrimer:AzeriteRank() >= 2 and Target:DebuffStackP(S.PrimalPrimerDebuff) > 7 and bool(VarFurycheckLl) and bool(VarClpoolLl)) then
       if HR.Cast(S.LavaLash) then return "lava_lash 360"; end
     end
     -- stormstrike,if=variable.OCPool_SS&variable.furyCheck_SS&variable.CLPool_SS
-    if S.Stormstrike:IsCastableP() and (bool(VarOcpoolSs) and bool(VarFurycheckSs) and bool(VarClpoolSs)) then
+    if S.Stormstrike:IsReadyP() and (bool(VarOcpoolSs) and bool(VarFurycheckSs) and bool(VarClpoolSs)) then
       if HR.Cast(S.Stormstrike) then return "stormstrike 370"; end
     end
     -- lava_lash,if=debuff.primal_primer.stack=10&variable.furyCheck_LL
-    if S.LavaLash:IsCastableP() and (Target:DebuffStackP(S.PrimalPrimerDebuff) == 10 and bool(VarFurycheckLl)) then
+    if S.LavaLash:IsReadyP() and (Target:DebuffStackP(S.PrimalPrimerDebuff) == 10 and bool(VarFurycheckLl)) then
       if HR.Cast(S.LavaLash) then return "lava_lash 378"; end
     end
   end
@@ -470,13 +480,13 @@ local function APL()
       if HR.Cast(S.Flametongue) then return "flametongue 384"; end
     end
     -- frostbrand,if=talent.hailstorm.enabled&!buff.frostbrand.up&variable.furyCheck_FB
-    if S.Frostbrand:IsCastableP() and (S.Hailstorm:IsAvailable() and Player:BuffDownP(S.FrostbrandBuff) and bool(VarFurycheckFb)) then
+    if S.Frostbrand:IsReadyP() and (S.Hailstorm:IsAvailable() and Player:BuffDownP(S.FrostbrandBuff) and bool(VarFurycheckFb)) then
       if HR.Cast(S.Frostbrand) then return "frostbrand 388"; end
     end
   end
   Priority = function()
     -- crash_lightning,if=active_enemies>=(8-(talent.forceful_winds.enabled*3))&variable.freezerburn_enabled&variable.furyCheck_CL
-    if S.CrashLightning:IsCastableP() and (Cache.EnemiesCount[8] >= (8 - (num(S.ForcefulWinds:IsAvailable()) * 3)) and bool(VarFreezerburnEnabled) and bool(VarFurycheckCl)) then
+    if S.CrashLightning:IsReadyP() and (Cache.EnemiesCount[8] >= (8 - (num(S.ForcefulWinds:IsAvailable()) * 3)) and bool(VarFreezerburnEnabled) and bool(VarFurycheckCl)) then
       if HR.Cast(S.CrashLightning) then return "crash_lightning 398"; end
     end
     -- the_unbound_force,if=buff.reckless_force.up|time<5
@@ -484,11 +494,11 @@ local function APL()
       if HR.Cast(S.TheUnboundForce, nil, Settings.Commons.EssenceDisplayStyle) then return "the_unbound_force 414"; end
     end
     -- lava_lash,if=azerite.primal_primer.rank>=2&debuff.primal_primer.stack=10&active_enemies=1&variable.freezerburn_enabled&variable.furyCheck_LL
-    if S.LavaLash:IsCastableP() and (S.PrimalPrimer:AzeriteRank() >= 2 and Target:DebuffStackP(S.PrimalPrimerDebuff) == 10 and Cache.EnemiesCount[8] == 1 and bool(VarFreezerburnEnabled) and bool(VarFurycheckLl)) then
+    if S.LavaLash:IsReadyP() and (S.PrimalPrimer:AzeriteRank() >= 2 and Target:DebuffStackP(S.PrimalPrimerDebuff) == 10 and Cache.EnemiesCount[8] == 1 and bool(VarFreezerburnEnabled) and bool(VarFurycheckLl)) then
       if HR.Cast(S.LavaLash) then return "lava_lash 418"; end
     end
     -- crash_lightning,if=!buff.crash_lightning.up&active_enemies>1&variable.furyCheck_CL
-    if S.CrashLightning:IsCastableP() and (Player:BuffDownP(S.CrashLightningBuff) and Cache.EnemiesCount[8] > 1 and bool(VarFurycheckCl)) then
+    if S.CrashLightning:IsReadyP() and (Player:BuffDownP(S.CrashLightningBuff) and Cache.EnemiesCount[8] > 1 and bool(VarFurycheckCl)) then
       if HR.Cast(S.CrashLightning) then return "crash_lightning 434"; end
     end
     -- fury_of_air,if=!buff.fury_of_air.up&maelstrom>=20&spell_targets.fury_of_air_damage>=(1+variable.freezerburn_enabled)
@@ -504,8 +514,8 @@ local function APL()
       if HR.Cast(S.TotemMastery) then return "totem_mastery 460"; end
     end
     -- sundering,if=active_enemies>=3&(!essence.blood_of_the_enemy.major|(essence.blood_of_the_enemy.major&(buff.seething_rage.up|cooldown.blood_of_the_enemy.remains>40)))
-    if S.Sundering:IsCastableP() and (Cache.EnemiesCount[8] >= 3 and (not bool(essence.blood_of_the_enemy.major) or (bool(essence.blood_of_the_enemy.major) and (Player:BuffP(S.SeethingRageBuff) or S.BloodoftheEnemy:CooldownRemainsP() > 40)))) then
-      if HR.Cast(S.Sundering) then return "sundering 464"; end
+    if S.Sundering:IsReadyP() and (Cache.EnemiesCount[8] >= 3 and (not S.BloodoftheEnemy:IsAvailable() or (S.BloodoftheEnemy:IsAvailable() and (Player:BuffP(S.SeethingRageBuff) or S.BloodoftheEnemy:CooldownRemainsP() > 40)))) then
+      if HR.Cast(S.Sundering, Settings.Enhancement.GCDasOffGCD.Sundering) then return "sundering 464"; end
     end
     -- focused_azerite_beam,if=active_enemies>1
     if S.FocusedAzeriteBeam:IsCastableP() and (Cache.EnemiesCount[8] > 1) then
@@ -524,7 +534,7 @@ local function APL()
       if HR.Cast(S.Rockbiter) then return "rockbiter 502"; end
     end
     -- frostbrand,if=(azerite.natural_harmony.enabled&buff.natural_harmony_frost.remains<=2*gcd)&talent.hailstorm.enabled&variable.furyCheck_FB
-    if S.Frostbrand:IsCastableP() and ((S.NaturalHarmony:AzeriteEnabled() and Player:BuffRemainsP(S.NaturalHarmonyFrostBuff) <= 2 * Player:GCD()) and S.Hailstorm:IsAvailable() and bool(VarFurycheckFb)) then
+    if S.Frostbrand:IsReadyP() and ((S.NaturalHarmony:AzeriteEnabled() and Player:BuffRemainsP(S.NaturalHarmonyFrostBuff) <= 2 * Player:GCD()) and S.Hailstorm:IsAvailable() and bool(VarFurycheckFb)) then
       if HR.Cast(S.Frostbrand) then return "frostbrand 512"; end
     end
     -- flametongue,if=(azerite.natural_harmony.enabled&buff.natural_harmony_fire.remains<=2*gcd)
