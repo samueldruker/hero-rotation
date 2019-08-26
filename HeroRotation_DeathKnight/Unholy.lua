@@ -244,7 +244,7 @@ local function APL()
       if HR.Cast(S.Apocalypse) then return "apocalypse 115"; end
     end
     -- dark_transformation,if=!raid_event.adds.exists|raid_event.adds.in>15
-    if S.DarkTransformation:IsCastableP() and (not (Cache.EnemiesCount[8] > 1)) then
+    if S.DarkTransformation:IsCastableP() then
       if HR.Cast(S.DarkTransformation, Settings.Unholy.GCDasOffGCD.DarkTransformation) then return "dark_transformation 119"; end
     end
     -- summon_gargoyle,if=runic_power.deficit<14
@@ -381,6 +381,9 @@ local function APL()
     end
     if (Settings.Commons.UseTrinkets) then
       -- use_items,if=time>20|!equipped.ramping_amplitude_gigavolt_engine|!equipped.vision_of_demise
+      if I.AzsharasFontofPower:IsEquipReady() and (HL.CombatTime() > 20 or not I.RampingAmplitudeGigavoltEngine:IsEquipped() or not I.VisionofDemise:IsEquipped()) then
+        if HR.Cast(I.AzsharasFontofPower, nil, Settings.Commons.TrinketDisplayStyle) then return "azsharas_font_of_power 258"; end
+      end
       -- use_item,name=ashvanes_razor_coral,if=debuff.razor_coral_debuff.stack<1
       if I.AshvanesRazorCoral:IsEquipReady() and (Target:DebuffDownP(S.RazorCoralDebuff)) then
         if HR.Cast(I.AshvanesRazorCoral, nil, Settings.Commons.TrinketDisplayStyle) then return "ashvanes_razor_coral 260"; end
