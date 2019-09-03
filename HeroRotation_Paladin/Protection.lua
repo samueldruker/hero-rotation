@@ -122,7 +122,7 @@ local function APL()
       end
       -- lights_judgment
       if S.LightsJudgment:IsCastableP() and HR.CDsON() then
-        if HR.Cast(S.LightsJudgment) then return "lights_judgment 10"; end
+        if HR.Cast(S.LightsJudgment, Settings.Commons.OffGCDasOffGCD.Racials) then return "lights_judgment 10"; end
       end
     end
   end
@@ -207,7 +207,7 @@ local function APL()
     end
     -- lights_judgment,if=buff.seraphim.up&buff.seraphim.remains<3
     if S.LightsJudgment:IsCastableP() and HR.CDsON() and (Player:BuffP(S.SeraphimBuff) and Player:BuffRemainsP(S.SeraphimBuff) < 3) then
-      if HR.Cast(S.LightsJudgment) then return "lights_judgment 103"; end
+      if HR.Cast(S.LightsJudgment, Settings.Commons.OffGCDasOffGCD.Racials) then return "lights_judgment 103"; end
     end
     -- consecration,if=!consecration.up
     if S.Consecration:IsCastableP() and (Player:BuffDownP(S.ConsecrationBuff)) then
@@ -225,13 +225,13 @@ local function APL()
     if S.Judgment:IsCastableP() and (S.Judgment:CooldownUpP() or not S.CrusadersJudgment:IsAvailable()) then
       if HR.Cast(S.Judgment) then return "judgment 129"; end
     end
-    -- concentrated_flame,if=buff.seraphim.up&!dot.concentrated_flame_burn.remains>0|essence.the_crucible_of_flame.rank<3
-    if S.ConcentratedFlame:IsCastableP() and (Player:BuffP(S.SeraphimBuff) and Target:DebuffDownP(S.ConcentratedFlameBurn) or (S.ConcentratedFlame:ID() == 295373 or S.ConcentratedFlame:ID() == 299349)) then
+    -- concentrated_flame,if=(!talent.seraphim.enabled|buff.seraphim.up)&!dot.concentrated_flame_burn.remains>0|essence.the_crucible_of_flame.rank<3
+    if S.ConcentratedFlame:IsCastableP() and ((not S.Seraphim:IsAvailable() or Player:BuffP(S.SeraphimBuff)) and Target:DebuffDownP(S.ConcentratedFlameBurn) or (S.ConcentratedFlame:ID() == 295373 or S.ConcentratedFlame:ID() == 299349)) then
       if HR.Cast(S.ConcentratedFlame, nil, Settings.Commons.EssenceDisplayStyle) then return "concentrated_flame"; end
     end
     -- lights_judgment,if=!talent.seraphim.enabled|buff.seraphim.up
     if S.LightsJudgment:IsCastableP() and HR.CDsON() and (not S.Seraphim:IsAvailable() or Player:BuffP(S.SeraphimBuff)) then
-      if HR.Cast(S.LightsJudgment) then return "lights_judgment 137"; end
+      if HR.Cast(S.LightsJudgment, Settings.Commons.OffGCDasOffGCD.Racials) then return "lights_judgment 137"; end
     end
     -- anima_of_death
     if S.AnimaofDeath:IsCastableP() then
@@ -249,8 +249,8 @@ local function APL()
     if S.Consecration:IsCastableP() then
       if HR.Cast(S.Consecration) then return "consecration 147"; end
     end
-    -- heart_essence,if=!essence.the_crucible_of_flame.major|!essence.worldvein_resonance.major|!essence.anima_of_life_and_death.major|!essence.memory_of_lucid_dreams.major
-    if S.HeartEssence:IsCastableP() and (not S.ConcentratedFlame:IsAvailable() or not S.WorldveinResonance:IsAvailable() or not S.AnimaofDeath:IsAvailable() or not S.MemoryofLucidDreams:IsAvailable()) then
+    -- heart_essence,if=!(essence.the_crucible_of_flame.major|essence.worldvein_resonance.major|essence.anima_of_life_and_death.major|essence.memory_of_lucid_dreams.major)
+    if S.HeartEssence:IsCastableP() and (not (S.ConcentratedFlame:IsAvailable() or S.WorldveinResonance:IsAvailable() or S.AnimaofDeath:IsAvailable() or S.MemoryofLucidDreams:IsAvailable())) then
       if HR.Cast(S.HeartEssence, nil, Settings.Commons.EssenceDisplayStyle) then return "heart_essence"; end
     end
   end
