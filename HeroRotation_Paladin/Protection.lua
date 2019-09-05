@@ -81,7 +81,7 @@ local Settings = {
   Protection = HR.GUISettings.APL.Paladin.Protection
 };
 
-local EnemyRanges = {}
+local EnemyRanges = {8}
 local function UpdateRanges()
   for _, i in ipairs(EnemyRanges) do
     HL.GetEnemies(i);
@@ -123,6 +123,10 @@ local function APL()
       -- lights_judgment
       if S.LightsJudgment:IsCastableP() and HR.CDsON() then
         if HR.Cast(S.LightsJudgment, Settings.Commons.OffGCDasOffGCD.Racials) then return "lights_judgment 10"; end
+      end
+      -- Manual Add: Avenger's Shield, if pulling at range
+      if S.AvengersShield:IsCastableP() then
+        if HR.Cast(S.AvengersShield) then return "avengers_shield 11"; end
       end
     end
   end
