@@ -201,7 +201,7 @@ local function APL()
       if (true) then
         VarCombustionRopCutoff = 60
       end
-      -- variable,name=combustion_on_use,op=set,value=equipped.notorious_aspirants_badge|equipped.notorious_gladiators_badge|equipped.sinister_gladiators_badge|equipped.sinister_aspirants_badge|equipped.dread_gladiators_badge|equipped.dread_aspirants_badge|equipped.dread_combatants_insignia|equipped.notorious_aspirants_medallion|equipped.notorious_gladiators_medallion|equipped.sinister_gladiators_medallion|equipped.sinister_aspirants_medallion|equipped.dread_gladiators_medallion|equipped.dread_aspirants_medallion|equipped.dread_combatants_medallion|equipped.ignition_mages_fuse|equipped.tzanes_barkspines|equipped.azurethos_singed_plumage|equipped.ancient_knot_of_wisdom|equipped.shockbiters_fang|equipped.neural_synapse_enhancer|equipped.balefire_branch
+      -- variable,name=combustion_on_use,op=set,value=equipped.gladiators_badge|equipped.gladiators_medallion|equipped.ignition_mages_fuse|equipped.tzanes_barkspines|equipped.azurethos_singed_plumage|equipped.ancient_knot_of_wisdom|equipped.shockbiters_fang|equipped.neural_synapse_enhancer|equipped.balefire_branch
       if (true) then
         VarCombustionOnUse = num(I.NotoriousAspirantsBadge:IsEquipped() or I.NotoriousGladiatorsBadge:IsEquipped() or I.SinisterGladiatorsBadge:IsEquipped() or I.SinisterAspirantsBadge:IsEquipped() or I.DreadGladiatorsBadge:IsEquipped() or I.DreadAspirantsBadge:IsEquipped() or I.DreadCombatantsInsignia:IsEquipped() or I.NotoriousAspirantsMedallion:IsEquipped() or I.NotoriousGladiatorsMedallion:IsEquipped() or I.SinisterGladiatorsMedallion:IsEquipped() or I.SinisterAspirantsMedallion:IsEquipped() or I.DreadGladiatorsMedallion:IsEquipped() or I.DreadAspirantsMedallion:IsEquipped() or I.DreadCombatantsMedallion:IsEquipped() or I.IgnitionMagesFuse:IsEquipped() or I.TzanesBarkspines:IsEquipped() or I.AzurethoseSingedPlumage:IsEquipped() or I.AncientKnotofWisdomAlliance:IsEquipped() or I.AncientKnotofWisdomHorde:IsEquipped() or I.ShockbitersFang:IsEquipped() or I.NeuralSynapseEnhancer:IsEquipped() or I.BalefireBranch:IsEquipped())
       end
@@ -263,8 +263,8 @@ local function APL()
     if S.RuneofPower:IsCastableP() and (Player:BuffDownP(S.CombustionBuff)) then
       if HR.Cast(S.RuneofPower, Settings.Fire.GCDasOffGCD.RuneofPower) then return "rune_of_power 250"; end
     end
-    -- fire_blast,use_while_casting=1,if=azerite.blaster_master.enabled&talent.flame_on.enabled&buff.blaster_master.down&(talent.rune_of_power.enabled&action.rune_of_power.executing&action.rune_of_power.execute_remains<0.6|(cooldown.combustion.ready|buff.combustion.up)&!talent.rune_of_power.enabled&!action.pyroblast.in_flight&!action.fireball.in_flight)
-    if S.FireBlast:IsReady() and (S.BlasterMaster:AzeriteEnabled() and S.FlameOn:IsAvailable() and Player:BuffDownP(S.BlasterMasterBuff) and (S.RuneofPower:IsAvailable() and Player:IsCasting(S.RuneofPower) and Player:CastRemains() < 0.6 or (S.Combustion:IsReady() or Player:BuffP(S.CombustionBuff)) and not S.RuneofPower:IsAvailable() and not S.Pyroblast:InFlight() and not S.Fireball:InFlight())) then
+    -- fire_blast,use_while_casting=1,if=azerite.blaster_master.enabled&essence.memory_of_lucid_dreams.major&talent.meteor.enabled&talent.flame_on.enabled&buff.blaster_master.down&(talent.rune_of_power.enabled&action.rune_of_power.executing&action.rune_of_power.execute_remains<0.6|(cooldown.combustion.ready|buff.combustion.up)&!talent.rune_of_power.enabled&!action.pyroblast.in_flight&!action.fireball.in_flight)
+    if S.FireBlast:IsReady() and (S.BlasterMaster:AzeriteEnabled() and S.MemoryofLucidDreams:IsAvailable() and S.Meteor:IsAvailable() and S.FlameOn:IsAvailable() and Player:BuffDownP(S.BlasterMasterBuff) and (S.RuneofPower:IsAvailable() and Player:IsCasting(S.RuneofPower) and Player:CastRemains() < 0.6 or (S.Combustion:IsReady() or Player:BuffP(S.CombustionBuff)) and not S.RuneofPower:IsAvailable() and not S.Pyroblast:InFlight() and not S.Fireball:InFlight())) then
       if HR.Cast(S.FireBlast) then return "fire_blast 255"; end
     end
     -- call_action_list,name=active_talents
@@ -324,7 +324,7 @@ local function APL()
       if HR.Cast(S.LivingBomb) then return "living_bomb 410"; end
     end
     -- dragons_breath,if=buff.combustion.remains<gcd.max&buff.combustion.up
-    if S.DragonsBreath:IsCastableP() and (Player:BuffRemainsP(S.CombustionBuff) < Player:GCD() and Player:BuffP(S.CombustionBuff)) then
+    if S.DragonsBreath:IsCastableP(12) and (Player:BuffRemainsP(S.CombustionBuff) < Player:GCD() and Player:BuffP(S.CombustionBuff)) then
       if HR.Cast(S.DragonsBreath) then return "dragons_breath 420"; end
     end
     -- scorch,if=target.health.pct<=30&talent.searing_touch.enabled
@@ -516,7 +516,7 @@ local function APL()
       if HR.Cast(S.Scorch) then return "scorch 552"; end
     end
     -- dragons_breath,if=active_enemies>2
-    if S.DragonsBreath:IsCastableP() and (EnemiesCount > 2) then
+    if S.DragonsBreath:IsCastableP(12) and (EnemiesCount > 2) then
       if HR.Cast(S.DragonsBreath) then return "dragons_breath 556"; end
     end
     -- fire_blast,use_off_gcd=1,use_while_casting=1,if=(talent.flame_patch.enabled&active_enemies>2|active_enemies>5)&(cooldown.combustion.remains>0&!firestarter.active)&buff.hot_streak.down&(!azerite.blaster_master.enabled|buff.blaster_master.remains<0.5)
@@ -578,7 +578,7 @@ local function APL()
       local ShouldReturn = ActiveTalents(); if ShouldReturn then return ShouldReturn; end
     end
     -- dragons_breath,if=active_enemies>1
-    if S.DragonsBreath:IsCastableP() and (EnemiesCount > 1) then
+    if S.DragonsBreath:IsCastableP(12) and (EnemiesCount > 1) then
       if HR.Cast(S.DragonsBreath) then return "dragons_breath 766"; end
     end
     -- call_action_list,name=items_low_priority
