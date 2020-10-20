@@ -11,19 +11,31 @@
 -- HeroRotation
   local HR      = HeroRotation;
 -- Spells
-  local SpellBlood   = Spell.DeathKnight.Blood;
   local SpellFrost   = Spell.DeathKnight.Frost;
   local SpellUnholy  = Spell.DeathKnight.Unholy;
 -- Lua
 
 --- ============================ CONTENT ============================
+-- Generic
+
 -- Blood, ID: 250
 
 -- Frost, ID: 251
+local OldFrostIsCastableP
+OldFrostIsCastableP = HL.AddCoreOverride("Spell.IsCastable",
+function (self, Range, AoESpell, ThisUnit, BypassRecovery, Offset)
+  local BaseCheck = OldFrostIsCastableP(self, Range, AoESpell, ThisUnit, BypassRecovery, Offset)
+  if self == SpellFrost.RaiseDead then
+    return (not Pet:IsActive()) and BaseCheck
+  else
+    return BaseCheck
+  end
+end
+, 251);
 
 -- Unholy, ID: 252
 local OldUHIsCastableP
-OldUHIsCastableP = HL.AddCoreOverride("Spell.IsCastableP",
+OldUHIsCastableP = HL.AddCoreOverride("Spell.IsCastable",
 function (self, Range, AoESpell, ThisUnit, BypassRecovery, Offset)
   local BaseCheck = OldUHIsCastableP(self, Range, AoESpell, ThisUnit, BypassRecovery, Offset)
   if self == SpellUnholy.RaiseDead then
@@ -37,7 +49,7 @@ end
 , 252);
 
 -- Example (Arcane Mage)
--- HL.AddCoreOverride ("Spell.IsCastableP", 
+-- HL.AddCoreOverride ("Spell.IsCastableP",
 -- function (self, Range, AoESpell, ThisUnit, BypassRecovery, Offset)
 --   if Range then
 --     local RangeUnit = ThisUnit or Target;

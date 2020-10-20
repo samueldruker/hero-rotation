@@ -1,7 +1,7 @@
-## Interface: 80205
+## Interface: 90001
 
 ## Title: Hero|cFFA330C9Rotation|r [|cFFFFFFFFPriest|r]
-## Author: KutiKuti
+## Author: Cilraaz
 ## Notes: Hero Rotation - Priest Module.
 
 ## DefaultState: Enabled
@@ -9,6 +9,7 @@
 ## Dependencies: HeroRotation
 
 Settings.lua
+Priest.lua
 Events.lua
 Shadow.lua
 Overrides.lua

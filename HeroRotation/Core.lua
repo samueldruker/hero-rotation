@@ -50,7 +50,7 @@
       local TextureCache = Cache.Persistent.Texture.Spell;
       if not TextureCache[SpellID] then
         -- Check if the SpellID is the one from Custom Textures or a Regular WoW Spell
-        if SpellID >= 9999000000 then
+        if SpellID >= 999900 then
           TextureCache[SpellID] = "Interface\\Addons\\HeroRotation\\Textures\\"..tostring(SpellID);
         elseif Object.TextureSpellID then
           TextureCache[SpellID] = GetSpellTexture(Object.TextureSpellID);
@@ -75,40 +75,90 @@
 
 --- ======= CASTS =======
   local GCDSpell = Spell(61304);
-  local function GCDDisplay ()
+  local CooldownSpell, CooldownSpellDisplayTime, CooldownSpellCastDuration;
+  local function DisplayCooldown (Object, DisplayPoolingSwirl, CustomTime)
+    local StartTime, CastDuration
+
+    -- Default GCD and Casting Swirls
+    local CurrentTime = GetTime()
     if Player:IsCasting() or Player:IsChanneling() then
-      HR.MainIconFrame:SetCooldown(Player:CastStart(), Player:CastDuration());
+      StartTime = Player:CastStart()
+      CastDuration = Player:CastDuration()
     else
-      HR.MainIconFrame:SetCooldown(GCDSpell:CooldownInfo());
+      StartTime, CastDuration = GCDSpell:CooldownInfo()
     end
+
+    -- Tracking Values for Current Spell
+    if CooldownSpell ~= Object then
+      CooldownSpell = Object
+      CooldownSpellDisplayTime = CurrentTime
+      CooldownSpellCastDuration = 0
+    end
+
+    -- Resource Pooling Display Swirls
+    if DisplayPoolingSwirl then
+      local TimeToResource
+      if CustomTime then
+        TimeToResource = CustomTime
+      else
+        TimeToResource = Player.TimeToXResourceMap[Object:CostInfo(1, "type")](Object:Cost())
+      end
+      if TimeToResource and TimeToResource > 0 then
+        -- Only display the resource-based swirl if the duration is greater than the GCD/Cast swirl
+        if TimeToResource > ((StartTime + CastDuration) - CurrentTime) then
+          local AdjustedCastDuration = CurrentTime - CooldownSpellDisplayTime + TimeToResource
+          -- 0.25s minimum, don't display an increase unless it is greater than 0.5s
+          if (CooldownSpellCastDuration == 0 and AdjustedCastDuration > 0.25) or CooldownSpellCastDuration > AdjustedCastDuration
+            or (AdjustedCastDuration - CooldownSpellCastDuration) > 0.5 then
+            CooldownSpellCastDuration = AdjustedCastDuration
+          end
+          StartTime = CooldownSpellDisplayTime
+          CastDuration = CooldownSpellCastDuration
+        end
+      end
+    end
+
+    -- Reset tracking if the current cooldown is finished
+    if((StartTime + CastDuration) < CurrentTime) then
+      StartTime = 0
+      CastDuration = 0
+      CooldownSpell = nil
+    end
+
+    HR.MainIconFrame:SetCooldown(StartTime, CastDuration);
   end
   -- Main Cast
   HR.CastOffGCDOffset = 1;
-  function HR.Cast (Object, OffGCD, DisplayStyle, RangeCheck)
+  function HR.Cast (Object, OffGCD, DisplayStyle, OutofRange, CustomTime)
     local ObjectTexture = HR.GetTexture(Object);
-    local Keybind = not HR.GUISettings.General.HideKeyBinds and HL.FindKeyBinding(ObjectTexture);
+    local Keybind = not HR.GUISettings.General.HideKeyBinds and HL.Action.TextureHotKey(ObjectTexture);
     if OffGCD or DisplayStyle == "Cooldown" then
-      if HR.CastOffGCDOffset <= 2 then
+      -- If this is the second cooldown, check to ensure we don't have a duplicate icon in the first slot
+      if HR.CastOffGCDOffset == 1 or (HR.CastOffGCDOffset == 2 and HR.SmallIconFrame:GetIcon(1) ~= ObjectTexture) then
         HR.SmallIconFrame:ChangeIcon(HR.CastOffGCDOffset, ObjectTexture, Keybind);
         HR.CastOffGCDOffset = HR.CastOffGCDOffset + 1;
-        Object.LastDisplayTime = HL.GetTime();
+        Object.LastDisplayTime = GetTime();
         return false;
       end
     elseif DisplayStyle == "Suggested" then
       HR.CastSuggested(Object);
+    elseif DisplayStyle == "SuggestedRight" then
+      HR.CastRightSuggested(Object);
     else
-      local PoolResource = 9999000010
+      local PoolResource = 999910
       local Usable = Object.SpellID == PoolResource or Object:IsUsable();
-      local IsInRange = RangeCheck and not Target:IsInRange(Object) or false
-      HR.MainIconFrame:ChangeIcon(ObjectTexture, Keybind, Usable, IsInRange);
-      GCDDisplay();
-      Object.LastDisplayTime = HL.GetTime();
+      local ShowPooling = DisplayStyle == "Pooling"
+
+      local OutofRange = OutofRange or false
+      HR.MainIconFrame:ChangeIcon(ObjectTexture, Keybind, Usable, OutofRange);
+      DisplayCooldown(Object, ShowPooling, CustomTime);
+      Object.LastDisplayTime = GetTime();
       return true;
     end
     return nil;
   end
   -- Overload for Main Cast (with text)
-  function HR.CastAnnotated(Object, OffGCD, Text)
+  function HR.CastAnnotated (Object, OffGCD, Text)
     local Result = HR.Cast(Object, OffGCD);
     -- TODO: handle small icon frame if OffGCD is true
     if not OffGCD then
@@ -116,22 +166,53 @@
     end
     return Result;
   end
-  -- Main Cast Queue
-  local QueueSpellTable, QueueLength, QueueTextureTable;
+  -- Overload for Main Cast (with resource pooling swirl)
+  function HR.CastPooling (Object, CustomTime, OutofRange)
+    return HR.Cast(Object, false, "Pooling", OutofRange, CustomTime)
+  end
+
+  -- Queued Casting Support
+  local QueueSpellTable, QueueLength, QueueTextureTable, QueueKeybindTable;
   HR.MaxQueuedCasts = 3;
-  function HR.CastQueue (...)
+  local function DisplayQueue (...)
     QueueSpellTable = {...};
     QueueLength = mathmin(#QueueSpellTable, HR.MaxQueuedCasts);
     QueueTextureTable = {};
     QueueKeybindTable = {};
     for i = 1, QueueLength do
       QueueTextureTable[i] = HR.GetTexture(QueueSpellTable[i]);
-      QueueSpellTable[i].LastDisplayTime = HL.GetTime();
-      QueueKeybindTable[i] = not HR.GUISettings.General.HideKeyBinds
-                              and HL.FindKeyBinding(QueueTextureTable[i]);
+      QueueSpellTable[i].LastDisplayTime = GetTime();
+      QueueKeybindTable[i] = not HR.GUISettings.General.HideKeyBinds and HL.Action.TextureHotKey(QueueTextureTable[i]);
     end
+    -- Call ChangeIcon so that the main icon exists to be able to display a cooldown sweep, even though it gets overlapped
+    HR.MainIconFrame:ChangeIcon(QueueTextureTable[1], QueueKeybindTable[1], QueueSpellTable[1]:IsUsable());
     HR.MainIconFrame:SetupParts(QueueTextureTable, QueueKeybindTable);
-    GCDDisplay();
+  end
+  -- Main Cast Queue
+  function HR.CastQueue (...)
+    DisplayQueue(...);
+    DisplayCooldown();
+    return "Should Return";
+  end
+  -- Pooling Cast Queue
+  function HR.CastQueuePooling (CustomTime, ...)
+    DisplayQueue(...);
+
+    -- If there is a custom time, just pass in the first spell
+    if CustomTime then
+      DisplayCooldown(QueueSpellTable[1], true, CustomTime)
+    else
+      -- Find the largest cost in the table to use as the cooldown object
+      local CostObject, MaxCost = nil, 0;
+      for i = 1, #QueueSpellTable do
+        if QueueSpellTable[i]:Cost() > MaxCost then
+          MaxCost = QueueSpellTable[i]:Cost()
+          CostObject = QueueSpellTable[i]
+        end
+      end
+      DisplayCooldown(CostObject, true)
+    end
+
     return "Should Return";
   end
 
@@ -140,7 +221,7 @@
   function HR.CastLeftCommon (Object)
     HR.LeftIconFrame:ChangeIcon(HR.GetTexture(Object));
     HR.CastLeftOffset = HR.CastLeftOffset + 1;
-    Object.LastDisplayTime = HL.GetTime();
+    Object.LastDisplayTime = GetTime();
   end
   function HR.CastLeft (Object)
     if HR.CastLeftOffset == 1 then
@@ -155,54 +236,28 @@
     return false;
   end
 
-  function HR.CastCycle(Object, Range, Condition)
-    if Condition(Target) then
-      return HR.Cast(Object)
-    end
-    if HR.AoEON() then
-      local BestUnit = nil
-      local TargetGUID = Target:GUID()
-      for _, CycleUnit in pairs(Cache.Enemies[Range]) do
-        if CycleUnit:GUID() ~= TargetGUID and not CycleUnit:IsFacingBlacklisted() and not CycleUnit:IsUserCycleBlacklisted() and Condition(CycleUnit) then
-          HR.CastLeftNameplate(CycleUnit, Object)
-          break
-        end
-      end
-    end
-  end
-
-  function HR.CastTargetIf(Object, Range, TargetIfMode, TargetIfCondition, Condition)
-    local TargetCondition = (not Condition or (Condition and Condition(Target)))
-    if not HR.AoEON() and TargetCondition then
-      return HR.Cast(Object)
-    end
-    if HR.AoEON() then
-      local BestUnit, BestConditionValue = nil, nil
-      for _, CycleUnit in pairs(Cache.Enemies[Range]) do
-        if not CycleUnit:IsFacingBlacklisted() and not CycleUnit:IsUserCycleBlacklisted() and ((Condition and Condition(CycleUnit)) or not Condition) and (not BestConditionValue or Utils.CompareThis(TargetIfMode, TargetIfCondition(CycleUnit), BestConditionValue)) then
-          BestUnit, BestConditionValue = CycleUnit, TargetIfCondition(CycleUnit)
-        end
-      end
-      if BestUnit then
-        if (BestUnit:GUID() == Target:GUID()) or (TargetCondition and (BestConditionValue == TargetIfCondition(Target))) then
-          return HR.Cast(Object)
-        else
-          HR.CastLeftNameplate(BestUnit, Object)
-        end
-      end
-    end
-  end
-
   -- Suggested Icon Cast
   HR.CastSuggestedOffset = 1;
   function HR.CastSuggested (Object)
     if HR.CastSuggestedOffset == 1 then
       HR.SuggestedIconFrame:ChangeIcon(HR.GetTexture(Object));
       HR.CastSuggestedOffset = HR.CastSuggestedOffset + 1;
-      Object.LastDisplayTime = HL.GetTime();
+      Object.LastDisplayTime = GetTime();
     end
     return false;
   end
+
+  -- Suggested Icon (Right) Cast
+  HR.CastRightSuggestedOffset = 1;
+  function HR.CastRightSuggested (Object)
+	if HR.CastRightSuggestedOffset == 1 then
+	  HR.RightSuggestedIconFrame:ChangeIcon(HR.GetTexture(Object));
+	  HR.CastRightSuggestedOffset = HR.CastRightSuggestedOffset + 1;
+	  Object.LastDisplayTime = GetTime();
+	end
+	return false;
+  end
+
 
 --- ======= COMMANDS =======
   -- Command Handler
@@ -282,8 +337,18 @@
   end
 
   -- Get if the AoE is enabled.
-  function HR.AoEON ()
-    return HeroRotationCharDB.Toggles[2];
+  do
+    local AoEImmuneNPCID = {
+      --- Legion
+        ----- Dungeons (7.0 Patch) -----
+        --- Mythic+ Affixes
+          -- Fel Explosives (7.2 Patch)
+          [120651] = true
+    }
+    -- Disable the AoE if we target an unit that is immune to AoE spells.
+    function HR.AoEON ()
+      return HeroRotationCharDB.Toggles[2] and not AoEImmuneNPCID[Target:NPCID()];
+    end
   end
 
   -- Get if the main toggle is on.

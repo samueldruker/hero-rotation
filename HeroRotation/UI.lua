@@ -28,11 +28,12 @@
   HR.LeftIconFrame = CreateFrame("Frame", "HeroRotation_LeftIconFrame", UIParent);
   HR.NameplateIconFrame = CreateFrame("Frame", "HeroRotation_NameplateIconFrame", UIParent);
   HR.SuggestedIconFrame = CreateFrame("Frame", "HeroRotation_SuggestedIconFrame", UIParent);
+  HR.RightSuggestedIconFrame = CreateFrame("Frame", "HeroRotation_RightSuggestedIconFrame", UIParent);
   HR.ToggleIconFrame = CreateFrame("Frame", "HeroRotation_ToggleIconFrame", UIParent);
 
 --- ======= MISC =======
   -- Reset Textures
-  local IdleSpellTexture = HR.GetTexture(Spell(9999000000));
+  local IdleSpellTexture = HR.GetTexture(Spell(999900));
   function HR.ResetIcons ()
     -- Main Icon
     HR.MainIconFrame:Hide();
@@ -53,6 +54,11 @@
     if HR.GUISettings.General.BlackBorderIcon then HR.SuggestedIconFrame.Backdrop:Hide(); end
     HR.CastSuggestedOffset = 1;
 
+	-- Right Suggested Icon
+	HR.RightSuggestedIconFrame:HideIcon();
+	if HR.GUISettings.General.BlackBorderIcon then HR.RightSuggestedIconFrame.Backdrop:Hide(); end
+	HR.CastRightSuggestedOffset = 1;
+
     -- Toggle icons
     if HR.GUISettings.General.HideToggleIcons then HR.ToggleIconFrame:Hide(); end
   end
@@ -61,7 +67,7 @@
   function HR:CreateBackdrop (Frame)
     if Frame.Backdrop or not HR.GUISettings.General.BlackBorderIcon then return; end
 
-    local Backdrop = CreateFrame("Frame", nil, Frame);
+    local Backdrop = CreateFrame("Frame", nil, Frame, BackdropTemplateMixin and "BackdropTemplate");
     Frame.Backdrop = Backdrop;
     Backdrop:ClearAllPoints();
     Backdrop:SetPoint("TOPLEFT", Frame, "TOPLEFT", -1, 1);
@@ -101,7 +107,7 @@
     self.Texture:SetAllPoints(self);
     -- Cooldown
     self.CooldownFrame:SetAllPoints(self);
-
+    -- Multi-Cast Parts Overlay
     HR.MainIconPartOverlayFrame:SetFrameStrata(self:GetFrameStrata());
     HR.MainIconPartOverlayFrame:SetFrameLevel(self:GetFrameLevel() + 1);
     HR.MainIconPartOverlayFrame:SetWidth(64);
@@ -138,13 +144,14 @@
     -- Display
     self:Show();
   end
+
   -- Change Icon
-  function HR.MainIconFrame:ChangeIcon (Texture, Keybind, Usable, RangeCheck)
+  function HR.MainIconFrame:ChangeIcon (Texture, Keybind, Usable, OutofRange)
     -- Texture
     self.Texture:SetTexture(Texture);
     if HR.GUISettings.General.NotEnoughManaEnabled and not Usable then
       self.Texture:SetGradient("HORIZONTAL", 0.5, 0.5, 1.0, 0.5, 0.5, 1.0);
-    elseif RangeCheck then
+    elseif OutofRange then
       self.Texture:SetGradient("HORIZONTAL", 1.0, 0.5, 0.5, 1.0, 0.5, 0.5);
     else
       self.Texture:SetGradient("HORIZONTAL", 1.0, 1.0, 1.0, 1.0, 1.0, 1.0);
@@ -173,6 +180,12 @@
   end
   -- Set a Cooldown Frame
   function HR.MainIconFrame:SetCooldown (Start, Duration)
+    if Start == 0 or Duration == 0 then
+      self.CooldownFrame:SetCooldown(0, 0);
+      self.CooldownFrame:Hide();
+      return;
+    end
+
     self.CooldownFrame:SetCooldown(Start, Duration);
   end
   function HR.MainIconFrame:InitParts ()
@@ -209,20 +222,25 @@
   local QueuedCasts, FrameWidth;
   function HR.MainIconFrame:SetupParts (Textures, Keybinds)
     QueuedCasts = #Textures;
-    FrameWidth = (HR.MainIconPartOverlayFrame.Texture:GetWidth() / QueuedCasts) * (HeroRotationDB.GUISettings["General.ScaleUI"] or 1)
+    FrameWidth = HR.MainIconPartOverlayFrame.Texture:GetWidth() / QueuedCasts
     local ULx, ULy, LLx, LLy, URx, URy, LRx, LRy = HR.MainIconPartOverlayFrame.Texture:GetTexCoord();
     for i = 1, QueuedCasts do
       local PartFrame = self.Part[i];
-      -- Size & Position
+      -- Size and Position
       PartFrame:SetWidth(FrameWidth);
       PartFrame:SetHeight(FrameWidth*QueuedCasts);
       PartFrame:ClearAllPoints();
       local _, AnchorPoint = HR.MainIconPartOverlayFrame.Texture:GetPoint();
-      if i == HR.MaxQueuedCasts or i == QueuedCasts then
-        PartFrame:SetPoint("Center", AnchorPoint, "Center", FrameWidth/(4-QueuedCasts), 0);
+      if HR.MainIconPartOverlayFrame.__MSQ_NormalColor then
+        if i == HR.MaxQueuedCasts or i == QueuedCasts then
+          PartFrame:SetPoint("Center", AnchorPoint, "Center", FrameWidth/(4-QueuedCasts), 0);
+        else
+          PartFrame:SetPoint("Center", AnchorPoint, "Center", (FrameWidth/(4-QueuedCasts))*(i-2), 0);
+        end
       else
-        PartFrame:SetPoint("Center", AnchorPoint, "Center", (FrameWidth/(4-QueuedCasts))*(i-2), 0);
+        PartFrame:SetPoint("Left", AnchorPoint, "Left", FrameWidth*(i-1), 0);
       end
+      -- Texture and Backdrop
       PartFrame.Texture:SetTexture(Textures[i]);
       PartFrame.Texture:SetAllPoints(PartFrame);
       if PartFrame.Backdrop then
@@ -332,6 +350,22 @@
       IconFrame:Show();
     end
   end
+  -- Get Icon
+  function HR.SmallIconFrame:GetIcon (FrameID)
+    local IconFrame = self.Icon[FrameID];
+    if IconFrame and IconFrame:IsVisible() then
+      return IconFrame.Texture:GetTexture();
+    end
+    return nil;
+  end
+  -- Get Keybind
+  function HR.SmallIconFrame:GetKeybind (FrameID)
+    local IconFrame = self.Icon[FrameID];
+    if IconFrame and IconFrame:IsVisible() then
+      return IconFrame.Keybind:GetText();
+    end
+    return "";
+  end
   -- Hide Small Icons
   function HR.SmallIconFrame:HideIcons ()
     for i = 1, #self.Icon do
@@ -423,7 +457,7 @@
       -- Set the Texture
       IconFrame.Texture:SetTexture(HR.GetTexture(Object));
       IconFrame.Texture:SetAllPoints(IconFrame);
-      IconFrame.Texture:SetAlpha(ThisUnit:IsInRange(Object) and 1 or 0.4);
+      IconFrame.Texture:SetAlpha(ThisUnit:IsSpellInRange(Object) and 1 or 0.4);
       IconFrame:ClearAllPoints();
       if not IconFrame:IsVisible() then
         if HR.GUISettings.General.NamePlateIconAnchor == "Life Bar" then
@@ -436,7 +470,7 @@
 
       -- Register the Unit for Error Checks (see Not Facing Unit Blacklist in Events.lua)
       HR.LastUnitCycled = ThisUnit;
-      HR.LastUnitCycledTime = HL.GetTime();
+      HR.LastUnitCycledTime = GetTime();
 
       return true;
     end
@@ -486,6 +520,44 @@
   -- Hide Icon
   function HR.SuggestedIconFrame:HideIcon ()
     HR.SuggestedIconFrame:Hide();
+  end
+
+--- ======= RIGHT SUGGESTED ICON =======
+  -- Init
+  function HR.RightSuggestedIconFrame:Init ()
+    -- Frame Init
+    self:SetFrameStrata(HR.MainFrame:GetFrameStrata());
+    self:SetFrameLevel(HR.MainFrame:GetFrameLevel() - 1);
+    self:SetWidth(32);
+    self:SetHeight(32);
+    self:SetPoint("BOTTOM", HR.MainIconFrame, "LEFT", HR.LeftIconFrame:GetWidth()/2, HR.LeftIconFrame:GetHeight()/2+(HR.GUISettings.General.BlackBorderIcon and 3 or 4));
+    -- Texture
+    self.Texture = self:CreateTexture(nil, "BACKGROUND");
+    -- Black Border Icon
+    if HR.GUISettings.General.BlackBorderIcon then
+      self.Texture:SetTexCoord(.08, .92, .08, .92);
+      HR:CreateBackdrop(self);
+    end
+    -- Display
+    self:Show();
+  end
+  -- Change Icon
+  function HR.RightSuggestedIconFrame:ChangeIcon (Texture)
+    -- Texture
+    self.Texture:SetTexture(Texture);
+    self.Texture:SetAllPoints(self);
+    -- Black Border Icon
+    if HR.GUISettings.General.BlackBorderIcon and not self.Backdrop:IsVisible() then
+      self.Backdrop:Show();
+    end
+    -- Display
+    if not self:IsVisible() then
+      self:Show();
+    end
+  end
+  -- Hide Icon
+  function HR.RightSuggestedIconFrame:HideIcon ()
+    HR.RightSuggestedIconFrame:Hide();
   end
 
 --- ======= TOGGLES =======

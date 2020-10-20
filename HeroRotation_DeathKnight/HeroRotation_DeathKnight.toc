@@ -1,7 +1,7 @@
-## Interface: 80205
+## Interface: 90001
 
 ## Title: Hero|cFFA330C9Rotation|r [|cFFC41F3BDeathKnight|r]
-## Author: chrislopez24, 3L00DStrike
+## Author: Krich
 ## Notes: Hero Rotation - DeathKnight Module.
 
 ## DefaultState: Enabled
@@ -10,8 +10,7 @@
 
 Settings.lua
 DeathKnight.lua
+Events.lua
 Frost.lua
 Unholy.lua
-Blood.lua
-Events.lua
 Overrides.lua

@@ -1,16 +1,19 @@
-## Interface: 80205
+## Interface: 90001
 
 ## Title: Hero|cFFA330C9Rotation|r
 ## Author: HeroTC, Aethys
-## Version: 8.2.5.01
-## Notes: Attempt to provide the useful and precise informations to execute the best possible DPS rotation in every situation.
+## Version: 9.0.1.04
+## Notes: Attempt to provide the useful and precise information to execute the best possible DPS rotation in every situation.
 
 ## DefaultState: Enabled
 ## LoadOnDemand: 0
-## Dependencies: HeroLib
+## Dependencies: HeroDBC, HeroLib
 ## OptionalDeps: AethysTools, Masque
 ## SavedVariables: HeroRotationDB
 ## SavedVariablesPerCharacter: HeroRotationCharDB
+
+# WoW Lib Stuff
+Lib\LibStub\LibStub.lua
 
 # GUI
 Panels.lua
@@ -29,3 +32,6 @@ UI.lua
 
 # Main
 Main.lua
+
+
+

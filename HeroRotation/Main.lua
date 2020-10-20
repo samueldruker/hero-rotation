@@ -84,16 +84,19 @@
         {HR.SmallIconFrame.Icon[2], HR.GUISettings.General.BlackBorderIcon and 30 or 32, HR.GUISettings.General.BlackBorderIcon and 30 or 32},
         {HR.LeftIconFrame, 48, 48},
         {HR.SuggestedIconFrame, 32, 32},
+		{HR.RightSuggestedIconFrame, 32, 32},
+        {HR.MainIconPartOverlayFrame, 64, 64},
       };
-      for Key, Value in pairs(FramesToResize) do
+      for _, Value in pairs(FramesToResize) do
         Value[1]:SetWidth(Value[2]*Multiplier);
         Value[1]:SetHeight(Value[3]*Multiplier);
       end
-	  for i = 1, HR.MaxQueuedCasts do
-		HR.MainIconFrame.Part[i]:SetWidth(64*Multiplier);
-		HR.MainIconFrame.Part[i]:SetHeight(64*Multiplier);
-	  end
+      for i = 1, HR.MaxQueuedCasts do
+        HR.MainIconFrame.Part[i]:SetWidth(64*Multiplier);
+        HR.MainIconFrame.Part[i]:SetHeight(64*Multiplier);
+      end
       HR.SuggestedIconFrame:SetPoint("BOTTOM", HR.MainIconFrame, "LEFT", -HR.LeftIconFrame:GetWidth()/2, HR.LeftIconFrame:GetHeight()/2+(HR.GUISettings.General.BlackBorderIcon and 3*Multiplier or 4*Multiplier));
+	  HR.RightSuggestedIconFrame:SetPoint("BOTTOM", HR.MainIconFrame, "RIGHT", HR.LeftIconFrame:GetWidth()/2, HR.LeftIconFrame:GetHeight()/2 + (HR.GUISettings.General.BlackBorderIcon and 3*Multiplier or 4*Multiplier)); -- todo matt fix this location
       HeroRotationDB.GUISettings["General.ScaleUI"] = Multiplier;
     end
     function HR.MainFrame:ResizeButtons (Multiplier)
@@ -123,6 +126,7 @@
       HR.Cast(LockSpell, {true});   -- Small Icon 2
       HR.CastLeft(LockSpell);       -- Left Icon
       HR.CastSuggested(LockSpell);  -- Suggested Icon
+	  HR.CastRightSuggested(LockSpell); -- Right Suggested Icon
       -- Unlock the UI
       for Key, Value in pairs(UIFrames) do
         Value:EnableMouse(true);
@@ -184,6 +188,7 @@
             ["Top Icons"] = HR.SmallIconFrame,
             ["Left Icon"] = HR.LeftIconFrame,
             ["Suggested Icon"] = HR.SuggestedIconFrame,
+			["Right Suggested Icon"] = HR.RightSuggestedIconFrame,
             ["Part Overlay"] = HR.MainIconPartOverlayFrame,
           };
           if not Masque then
@@ -222,6 +227,7 @@
           HR.SmallIconFrame:Init();
           HR.LeftIconFrame:Init();
           HR.SuggestedIconFrame:Init();
+		  HR.RightSuggestedIconFrame:Init();
           HR.ToggleIconFrame:Init();
           if HeroRotationDB.GUISettings["General.ScaleUI"] then
             HR.MainFrame:ResizeUI(HeroRotationDB.GUISettings["General.ScaleUI"]);
@@ -266,6 +272,7 @@
             HR.SmallIconFrame.Icon[2],
             HR.LeftIconFrame,
             HR.SuggestedIconFrame,
+			HR.RightSuggestedIconFrame,
             HR.ToggleIconFrame
           };
 
@@ -312,15 +319,15 @@
       [254]   = "HeroRotation_Hunter",        -- Marksmanship
       [255]   = "HeroRotation_Hunter",        -- Survival
     -- Mage
-      [62]    = "HeroRotation_Mage",          -- Arcane
-      [63]    = "HeroRotation_Mage",          -- Fire
+      [62]    = false,                        -- Arcane
+      [63]    = false,                        -- Fire
       [64]    = "HeroRotation_Mage",          -- Frost
     -- Monk
       [268]   = "HeroRotation_Monk",          -- Brewmaster
       [269]   = "HeroRotation_Monk",          -- Windwalker
       [270]   = false,                          -- Mistweaver
     -- Paladin
-      [65]    = false,                          -- Holy
+      [65]    = "HeroRotation_Paladin",       -- Holy
       [66]    = "HeroRotation_Paladin",       -- Protection
       [70]    = "HeroRotation_Paladin",       -- Retribution
     -- Priest
@@ -385,7 +392,6 @@
             -- Spells
             Player:RegisterListenedSpells(SpecID);
             HL.UnregisterAuraTracking();
-            HL.UnregisterNucleusAbilities();
             -- Enums Filters
             Player:FilterTriggerGCD(SpecID);
             Spell:FilterProjectileSpeed(SpecID);
@@ -398,7 +404,7 @@
               HR.Print("It looks like enemy nameplates are disabled, you should enable them in order to get proper AoE rotation.");
             end
           else
-            HR.Print("No Rotation found for this class/spec (SpecID: ".. SpecID .. "), addon disabled.");
+            HR.Print("No Rotation found for this class/spec (SpecID: ".. SpecID .. "), addon disabled. This is likely due to the rotation being unsupported at this time. Please check supported rotations here: https://github.com/herotc/hero-rotations#supported-rotations");
             for Key, Value in pairs(UIFrames) do
               Value:Hide();
             end
@@ -415,8 +421,8 @@
     Pulse = 0
   };
   function HR.Pulse ()
-    if HL.GetTime() > HR.Timer.Pulse and HR.Locked() then
-      HR.Timer.Pulse = HL.GetTime() + HL.Timer.PulseOffset;
+    if GetTime() > HR.Timer.Pulse and HR.Locked() then
+      HR.Timer.Pulse = GetTime() + HL.Timer.PulseOffset;
 
       HR.ResetIcons();
 
@@ -456,5 +462,5 @@
   -- Used to force a short/long pulse wait, it also resets the icons.
   function HR.ChangePulseTimer (Offset)
     HR.ResetIcons();
-    HR.Timer.Pulse = HL.GetTime() + Offset;
+    HR.Timer.Pulse = GetTime() + Offset;
   end

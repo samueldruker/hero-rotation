@@ -1,7 +1,7 @@
-## Interface: 80205
+## Interface: 90001
 
 ## Title: Hero|cFFA330C9Rotation|r [|cFFFFF569Rogue|r]
-## Author: Aethys, Mystler
+## Author: Aethys, Kojiyama, Mystler
 ## Notes: Hero Rotation - Rogue Module.
 
 ## DefaultState: Enabled
@@ -10,8 +10,8 @@
 
 Settings.lua
 Rogue.lua
+Events.lua
 Assassination.lua
 Outlaw.lua
 Subtlety.lua
-Events.lua
 Overrides.lua

@@ -2,6 +2,8 @@
 --- ======= LOCALIZE =======
 -- Addon
 local addonName, addonTable = ...;
+-- HeroDBC
+local DBC = HeroDBC.DBC
 -- HeroLib
 local HL = HeroLib;
 local Cache = HeroCache;
@@ -11,50 +13,54 @@ local Player = Unit.Player;
 local Target = Unit.Target;
 local Spell = HL.Spell;
 local Item = HL.Item;
+HR.Commons.Hunter = {};
 local Hunter = HR.Commons.Hunter;
-local RangeIndex = HL.Enum.ItemRange.Hostile.RangeIndex
-local TriggerGCD = HL.Enum.TriggerGCD;
 -- Lua
 local pairs = pairs;
 local select = select;
 local wipe = wipe;
 local GetTime = HL.GetTime;
+-- Spells
+local SpellBM = Spell.Hunter.BeastMastery;
 
--- MM Hunter GCD Management
+-- Animal Companion Listener
+do
+  Hunter.PetTable = {
+    LastPetSpellID = 0,
+    LastPetSpellCount = 0
+  }
 
-Player.MMHunter = {
-  GCDDisable = 0;
-}
-HL:RegisterForSelfCombatEvent(
-  function (...)
-    local CastSpell = Spell(select(12, ...))
-    if CastSpell:CastTime() == 0 and TriggerGCD[CastSpell:ID()] then
-      Player.MMHunter.GCDDisable = Player.MMHunter.GCDDisable + 1;
-      --print("GCDDisable: " .. tostring(GCDDisable))
-      C_Timer.After(0.1, 
-      function ()
-        Player.MMHunter.GCDDisable = Player.MMHunter.GCDDisable - 1;
-        --print("GCDDisable: " .. tostring(GCDDisable))
+  local DestGUID, SpellID;
+  local PetGUIDs = {};
+
+  HL:RegisterForSelfCombatEvent(
+    function (...)
+      if SpellBM.AnimalCompanion:IsAvailable() then
+        DestGUID, _, _, _, SpellID = select(8, ...);
+        if (SpellID == SpellBM.BeastCleaveBuff:ID() and Hunter.PetTable.LastPetSpellID == SpellBM.Multishot:ID())
+        or (SpellID == SpellBM.FrenzyBuff:ID() and Hunter.PetTable.LastPetSpellID == SpellBM.BarbedShot:ID())
+        or (SpellID == SpellBM.BestialWrathPetBuff:ID() and Hunter.PetTable.LastPetSpellID == SpellBM.BestialWrath:ID()) then
+          if not PetGUIDs[DestGUID] then
+            PetGUIDs[DestGUID] = true
+            Hunter.PetTable.LastPetSpellCount = Hunter.PetTable.LastPetSpellCount + 1
+          end
+        end
       end
-      );
     end
-  end
-  , "SPELL_CAST_SUCCESS"
-);
+    , "SPELL_AURA_APPLIED", "SPELL_AURA_REFRESH", "SPELL_AURA_APPLIED_DOSE"
+  );
 
-HL:RegisterForSelfCombatEvent(
-  function (...)
-    local CastSpell = Spell(select(12, ...))
-    if CastSpell:CastTime() > 0 and TriggerGCD[CastSpell:ID()] then
-      Player.MMHunter.GCDDisable = Player.MMHunter.GCDDisable + 1;
-      --print("GCDDisable: " .. tostring(GCDDisable))
-      C_Timer.After(0.1, 
-      function ()
-        Player.MMHunter.GCDDisable = Player.MMHunter.GCDDisable - 1;
-        --print("GCDDisable: " .. tostring(GCDDisable))
+  HL:RegisterForSelfCombatEvent(
+    function (...)
+      if SpellBM.AnimalCompanion:IsAvailable() then
+        SpellID = select(12, ...)
+        if SpellID == SpellBM.Multishot:ID() or SpellID == SpellBM.BarbedShot:ID() or SpellID == SpellBM.BestialWrath:ID() then
+          PetGUIDs = {}
+          Hunter.PetTable.LastPetSpellID = SpellID
+          Hunter.PetTable.LastPetSpellCount = 0
+        end
       end
-      );
     end
-  end
-  , "SPELL_CAST_START"
-);
+    , "SPELL_CAST_SUCCESS"
+  );
+end

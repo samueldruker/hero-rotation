@@ -1,7 +1,7 @@
-## Interface: 80205
+## Interface: 90001
 
 ## Title: Hero|cFFA330C9Rotation|r [|cFF40C7EBMage|r]
-## Author: Glynny, Zulandia, Nia
+## Author: KutiKuti
 ## Notes: Hero Rotation - Mage Module.
 
 ## DefaultState: Enabled
@@ -10,8 +10,8 @@
 
 Settings.lua
 Mage.lua
-Frost.lua
-Fire.lua
-Arcane.lua
 Events.lua
+Arcane.lua
+Fire.lua
+Frost.lua
 Overrides.lua
