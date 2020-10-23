@@ -44,14 +44,13 @@ Spell.Monk.Windwalker = {
   FistsofFury                           = Spell(113656),
   FlyingSerpentKick                     = Spell(101545),
   FlyingSerpentKickActionBarReplacement = Spell(115057),
-  InvokeXuentheWhiteTiger               = Spell(123904),
+  InvokeXuenTheWhiteTiger               = Spell(123904),
   RisingSunKick                         = Spell(107428),
   SpinningCraneKick                     = Spell(101546),
-  StormEarthandFire                     = Spell(137639),
-  StormEarthandFireBuff                 = Spell(137639),
+  StormEarthAndFire                     = Spell(137639),
+  StormEarthAndFireBuff                 = Spell(137639),
   TigerPalm                             = Spell(100780),
-  TouchofDeath                          = Spell(115080),
-  TouchofDeathDebuff                    = Spell(115080),
+  TouchofDeath                          = Spell(322109),
   
   -- Debuffs
   MarkoftheCraneDebuff                  = Spell(228287),
@@ -135,6 +134,8 @@ Spell.Monk.Windwalker = {
 
   -- Shadowlands Legendary
   ChiEnergyBuff                         = Spell(337571),
+  RecentlyRushingTigerPalm              = Spell(337340),
+  RecentlyRushingTigerPalm              = Spell(337341),
 
   -- Misc
   PoolEnergy                            = Spell(999910)
@@ -157,10 +158,10 @@ Spell.Monk.Brewmaster = {
   Brews                        = Spell(115308),
   CracklingJadeLightning       = Spell(117952),
   ExpelHarm                    = Spell(115072),
-  InvokeNiuzaotheBlackOx       = Spell(132578),
+  InvokeNiuzaoTheBlackOx       = Spell(132578),
   KegSmash                     = Spell(121253),
   TigerPalm                    = Spell(100780),
-  TouchofDeath                 = Spell(115080),
+  TouchofDeath                 = Spell(322109),
 
   -- Debuffs
   BreathofFireDotDebuff        = Spell(123725),
@@ -186,6 +187,7 @@ Spell.Monk.Brewmaster = {
   CelestialBrew                = Spell(322507),
   DampenHarm                   = Spell(122278), --Talent
   DampenHarmBuff               = Spell(122278),
+  ElusiveBrawlerBuff           = Spell(195630),
   FortifyingBrew               = Spell(115203),
   FortifyingBrewBuff           = Spell(115203),
   HighTolerance                = Spell(196737), -- Talent
